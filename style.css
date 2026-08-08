@@ -31,8 +31,8 @@ body{
    vector/SVG, so it stays crisp at any scale, small screens to 4K. */
 #paper{
   position:relative;
-  width:960px;
-  height:620px;
+  width:var(--design-w, 960px);
+  height:var(--design-h, 620px);
   transform-origin:center center;
   background:var(--paper);
   background-image:
@@ -134,6 +134,49 @@ body{
 .ink-btn.tiny{font-size:.85rem;padding:8px 18px;letter-spacing:.1em}
 .ink-btn.back{margin-top:22px;opacity:.8}
 .quit{position:absolute;top:14px;right:16px}
+
+/* ---- on-screen note pad ---- */
+#notepad{
+  display:none;
+  gap:10px;
+  padding:12px 14px 18px;
+  border-top:3px solid var(--ink);
+  background:var(--paper-2);
+}
+#notepad.show{display:grid}
+.note-row{display:contents}
+
+/* landscape: one row of seven; portrait: two rows (4 + 3, centred) */
+body:not(.portrait) #notepad.show{grid-template-columns:repeat(7,1fr)}
+body.portrait #notepad.show{grid-template-columns:repeat(4,1fr)}
+body.portrait .note-row:nth-child(2) .note-btn:nth-child(1){grid-column:2}
+body.portrait .note-row:nth-child(2) .note-btn:nth-child(2){grid-column:3}
+body.portrait .note-row:nth-child(2) .note-btn:nth-child(3){grid-column:4}
+
+.note-btn{
+  font-family:'Shippori Mincho',serif;
+  font-weight:800;
+  font-size:2rem;
+  letter-spacing:.05em;
+  height:88px;
+  border:3px solid var(--ink);
+  border-radius:4px 14px 6px 16px;
+  background:var(--paper);
+  color:var(--ink);
+  box-shadow:4px 4px 0 rgba(0,0,0,.85);
+  cursor:pointer;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  transition:transform .08s ease, box-shadow .08s ease, background .15s, color .15s;
+}
+.note-btn:active{
+  transform:translate(3px,3px);
+  box-shadow:1px 1px 0 rgba(0,0,0,.85);
+  background:var(--ink);
+  color:var(--paper);
+}
+.note-btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 
 .ink-btn.diff{
   display:flex;align-items:center;gap:14px;text-align:left;
@@ -313,6 +356,20 @@ input[type=range]::-moz-range-thumb{
 @keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}
   30%{opacity:1;transform:translate(-50%,-60%) scale(1.15)}
   100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+
+/* ====================================================================
+   PORTRAIT LAYOUT
+   The paper becomes 620×1240 in portrait (fitToViewport sets the CSS
+   variables); these overrides keep the duel framed in the taller arena.
+   ==================================================================== */
+body.portrait .screen{padding:16px}
+body.portrait .brush-frame{padding:22px 28px}
+body.portrait #timer-track{top:42px}
+body.portrait #prompt{top:72px}
+body.portrait .demon{bottom:30%;width:150px;height:150px;margin-left:-75px}
+body.portrait #samurai{margin-left:-110px}
+body.portrait #samurai svg{width:220px;height:257px}
+body.portrait #popup{top:34%}
 
 /* ---- game over ---- */
 .over-line{font-size:1.2rem;margin:8px 0;letter-spacing:.04em}

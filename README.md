@@ -32,6 +32,8 @@ literally walks the whole circle of fifths/fourths, over and over.
     strike hint and the HUD for a purer duel (the demon still shows its letter,
     since that's the note you must react to)
   - Sound: on / off
+  - Touch keys: **Auto**, **Show**, or **Hide** — Auto shows the on-screen note
+    buttons on touch screens without a keyboard or mouse
 
 Your best score is saved in the browser (`localStorage`).
 
@@ -57,7 +59,17 @@ then visit <http://localhost:8731>.
 | Key | Action |
 | --- | --- |
 | `A`–`G` | Strike that note |
+| On-screen note buttons | Strike with touch — auto-shown on phones/tablets, or set via Options → Touch keys |
 | `Esc` | Quit to menu (during a run) |
+
+## Mobile / touch
+
+- The game switches to a dedicated portrait layout on phones (a taller
+  620×1240 paper), and keeps the existing landscape layout on wider screens.
+- On touch devices without a keyboard, a 7-button note pad appears below the
+  arena: two rows in portrait, one row in landscape.
+- If you use a phone with a Bluetooth keyboard (or a touch laptop where you'd
+  rather tap), override the detection with **Options → Touch keys**.
 
 ## Files
 
@@ -67,10 +79,11 @@ then visit <http://localhost:8731>.
 
 ## Notes
 
-- The whole game is authored at a fixed 960×620 design size and uniformly
-  scaled to fit the viewport (`fitToViewport` in `game.js`), so it fills
-  everything from small laptops to 4K displays and re-fits live on resize.
-  Because the art is all vector/SVG, it stays crisp at any scale.
+- The game is authored at two design sizes — 960×620 landscape and 620×1240
+  portrait — and uniformly scaled to fit the viewport (`fitToViewport` in
+  `game.js`), so it fills everything from phones to 4K displays and re-fits
+  live on resize. Because the art is all vector/SVG, it stays crisp at any
+  scale.
 - The reaction deadline is driven by a `setTimeout`, not `requestAnimationFrame`,
   so backgrounding the tab can't freeze the timer to gain free time. The
   animated bar is purely visual.

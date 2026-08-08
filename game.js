@@ -17,14 +17,17 @@ const DIFFICULTY = {          // reaction window in ms
   hard:    700,
 };
 
-const SPAWN_MIN = 550;        // random delay before a demon appears (ms)
-const SPAWN_MAX = 1900;
+const SPAWN_MIN = 1800;       // random delay before a demon appears (ms)
+const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
+
+const PREPARE_MS = 2600;      // calm "ready" phase before the first demon
 
 /* ------------------------------------------------------------------ */
 const settings = {
   cycle: 'fourths',
   sound: true,
   showUI: true,
+  touchKeys: 'auto',       // 'auto' | 'show' | 'hide'
   reaction: DIFFICULTY.medium,
 };
 
@@ -37,6 +40,7 @@ const state = {
   streak: 0,
   best: Number(localStorage.getItem('samurai-best') || 0),
   spawnTimer: null,
+  prepareTimer: null,
   rafId: null,
   deadlineTimer: null,
   windowStart: 0,
@@ -59,6 +63,7 @@ function show(name) {
   Object.values(screens).forEach((s) => s.classList.remove('active'));
   screens[name].classList.add('active');
   state.screen = name;
+  refreshNotePad();
 }
 
 /* ================================================================== */
@@ -112,7 +117,16 @@ function startGame() {
   $('#screen-game').classList.toggle('no-ui', !settings.showUI);
   clearDemon();
   show('game');
-  scheduleSpawn();
+  beginPrepare();
+}
+
+// Calm "zen" moment before the duel begins: the samurai centres himself,
+// then the first demon appears.
+function beginPrepare() {
+  hidePrompt();
+  popup('集中 — ready…');
+  clearTimeout(state.prepareTimer);
+  state.prepareTimer = setTimeout(scheduleSpawn, PREPARE_MS);
 }
 
 function scheduleSpawn() {
@@ -260,6 +274,7 @@ function gameOver(reason) {
   state.playing = false;
   state.awaiting = false;
   clearTimeout(state.spawnTimer);
+  clearTimeout(state.prepareTimer);
   clearTimeout(state.deadlineTimer);
   cancelAnimationFrame(state.rafId);
   failSound();
@@ -299,6 +314,14 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// On-screen note buttons (touch devices)
+document.querySelectorAll('.note-btn').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    handleKey(btn.dataset.note);
+  });
+});
+
 /* ================================================================== */
 /*  MENU / OPTIONS WIRING                                             */
 /* ================================================================== */
@@ -314,6 +337,7 @@ document.querySelectorAll('[data-go]').forEach((btn) => {
 function quitToMenu() {
   state.playing = false;
   clearTimeout(state.spawnTimer);
+  clearTimeout(state.prepareTimer);
   clearTimeout(state.deadlineTimer);
   cancelAnimationFrame(state.rafId);
   clearDemon();
@@ -383,26 +407,68 @@ document.querySelectorAll('#sound-toggle .toggle-opt').forEach((b) => {
   });
 });
 
+document.querySelectorAll('#touch-toggle .toggle-opt').forEach((b) => {
+  b.addEventListener('click', () => {
+    settings.touchKeys = b.dataset.touch;
+    document.querySelectorAll('#touch-toggle .toggle-opt')
+      .forEach((x) => x.classList.toggle('active', x === b));
+    refreshNotePad();
+  });
+});
+
 /* ================================================================== */
 /*  FIT-TO-VIEWPORT SCALING                                           */
 /*  The paper is authored at a fixed design size and scaled to fill   */
 /*  whatever screen it runs on — tiny laptops up to 4K displays.      */
 /* ================================================================== */
-const DESIGN_W = 960;
-const DESIGN_H = 620;
+const DESIGN = {
+  landscape: { w: 960, h: 620 },
+  portrait:  { w: 620, h: 1240 },
+};
 
 function fitToViewport() {
   const paper = $('#paper');
+  const portrait = window.innerHeight > window.innerWidth;
+  const d = DESIGN[portrait ? 'portrait' : 'landscape'];
+  document.body.classList.toggle('portrait', portrait);
+  paper.style.setProperty('--design-w', d.w + 'px');
+  paper.style.setProperty('--design-h', d.h + 'px');
+
   const margin = 0.97;                       // small breathing room
   const s = Math.min(
-    (window.innerWidth  * margin) / DESIGN_W,
-    (window.innerHeight * margin) / DESIGN_H
+    (window.innerWidth  * margin) / d.w,
+    (window.innerHeight * margin) / d.h
   );
   paper.style.transform = `scale(${s})`;
 }
 
+/* ================================================================== */
+/*  TOUCH KEYS                                                        */
+/*  No browser can reliably detect a physical keyboard, so AUTO uses  */
+/*  pointer heuristics: any coarse pointer and no fine pointer means  */
+/*  a phone/tablet without a keyboard or mouse. SHOW/HIDE override.   */
+/* ================================================================== */
+function prefersTouchKeys() {
+  if (settings.touchKeys !== 'auto') return settings.touchKeys === 'show';
+  return (
+    matchMedia('(any-pointer: coarse)').matches &&
+    !matchMedia('(any-pointer: fine)').matches
+  );
+}
+
+function refreshNotePad() {
+  const showPad = state.screen === 'game' && prefersTouchKeys();
+  $('#notepad').classList.toggle('show', showPad);
+  document.body.classList.toggle('touch-keys', showPad);
+}
+
 window.addEventListener('resize', fitToViewport);
 window.addEventListener('orientationchange', fitToViewport);
+['(any-pointer: coarse)', '(any-pointer: fine)'].forEach((query) => {
+  const mq = matchMedia(query);
+  if (mq.addEventListener) mq.addEventListener('change', refreshNotePad);
+  else if (mq.addListener) mq.addListener(refreshNotePad);
+});
 
 /* ---- init ---- */
 $('#best').textContent = state.best;

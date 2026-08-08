@@ -89,6 +89,16 @@
             </div>
           </div>
 
+          <div class="opt-row">
+            <span class="opt-label">Touch keys</span>
+            <div class="toggle" id="touch-toggle">
+              <button class="toggle-opt active" data-touch="auto">AUTO</button>
+              <button class="toggle-opt" data-touch="show">SHOW</button>
+              <button class="toggle-opt" data-touch="hide">HIDE</button>
+            </div>
+          </div>
+          <p class="opt-desc">Auto shows note buttons on touch screens without a keyboard.</p>
+
           <button class="ink-btn ghost tiny back" data-go="menu">← back</button>
         </div>
       </section>
@@ -182,6 +192,21 @@
 
           <!-- floating popups (SLASH! / MISS!) -->
           <div id="popup"></div>
+        </div>
+
+        <!-- On-screen note buttons (shown on touch devices) -->
+        <div id="notepad" aria-label="On-screen note buttons">
+          <div class="note-row">
+            <button class="note-btn" type="button" data-note="A" aria-label="Strike A">A</button>
+            <button class="note-btn" type="button" data-note="B" aria-label="Strike B">B</button>
+            <button class="note-btn" type="button" data-note="C" aria-label="Strike C">C</button>
+            <button class="note-btn" type="button" data-note="D" aria-label="Strike D">D</button>
+          </div>
+          <div class="note-row">
+            <button class="note-btn" type="button" data-note="E" aria-label="Strike E">E</button>
+            <button class="note-btn" type="button" data-note="F" aria-label="Strike F">F</button>
+            <button class="note-btn" type="button" data-note="G" aria-label="Strike G">G</button>
+          </div>
         </div>
 
         <button class="ink-btn ghost tiny quit" data-go="menu">quit</button>
