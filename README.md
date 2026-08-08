@@ -64,8 +64,9 @@ then visit <http://localhost:8731>.
 
 ## Mobile / touch
 
-- The game switches to a dedicated portrait layout on phones (a taller
-  620×1240 paper), and keeps the existing landscape layout on wider screens.
+- The game switches to a dedicated portrait layout on phones and fills the
+  browser viewport edge-to-edge (a 620-wide design whose height stretches to
+  match the screen), and keeps the existing landscape layout on wider screens.
 - On touch devices without a keyboard, a 7-button note pad appears below the
   arena: two rows in portrait, one row in landscape.
 - If you use a phone with a Bluetooth keyboard (or a touch laptop where you'd
@@ -79,11 +80,11 @@ then visit <http://localhost:8731>.
 
 ## Notes
 
-- The game is authored at two design sizes — 960×620 landscape and 620×1240
-  portrait — and uniformly scaled to fit the viewport (`fitToViewport` in
-  `game.js`), so it fills everything from phones to 4K displays and re-fits
-  live on resize. Because the art is all vector/SVG, it stays crisp at any
-  scale.
+- The game is authored at a 960×620 landscape design size and a 620-wide
+  portrait design size (portrait height stretches to fill the screen), then
+  uniformly scaled to fit the viewport (`fitToViewport` in `game.js`), so it
+  fills everything from phones to 4K displays and re-fits live on resize.
+  Because the art is all vector/SVG, it stays crisp at any scale.
 - The reaction deadline is driven by a `setTimeout`, not `requestAnimationFrame`,
   so backgrounding the tab can't freeze the timer to gain free time. The
   animated bar is purely visual.

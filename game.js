@@ -423,22 +423,37 @@ document.querySelectorAll('#touch-toggle .toggle-opt').forEach((b) => {
 /* ================================================================== */
 const DESIGN = {
   landscape: { w: 960, h: 620 },
-  portrait:  { w: 620, h: 1240 },
+  portrait:  { w: 620 },       // height is stretched to fill the screen
 };
 
 function fitToViewport() {
   const paper = $('#paper');
-  const portrait = window.innerHeight > window.innerWidth;
-  const d = DESIGN[portrait ? 'portrait' : 'landscape'];
+  // Layout viewport, not window.inner*, so browser zoom/toolbars can't skew it.
+  const vw = document.documentElement.clientWidth;
+  const vh = document.documentElement.clientHeight;
+  const portrait = vh > vw;
   document.body.classList.toggle('portrait', portrait);
-  paper.style.setProperty('--design-w', d.w + 'px');
-  paper.style.setProperty('--design-h', d.h + 'px');
 
-  const margin = 0.97;                       // small breathing room
-  const s = Math.min(
-    (window.innerWidth  * margin) / d.w,
-    (window.innerHeight * margin) / d.h
-  );
+  let w, h, s;
+  if (portrait) {
+    // Fill the viewport edge-to-edge: scale by the design width, then
+    // stretch the design height to match the phone's aspect ratio.
+    w = DESIGN.portrait.w;
+    s = vw / w;
+    h = Math.round(vh / s);
+  } else {
+    const d = DESIGN.landscape;
+    w = d.w;
+    h = d.h;
+    const margin = 0.97;       // small breathing room
+    s = Math.min(
+      (vw * margin) / d.w,
+      (vh * margin) / d.h
+    );
+  }
+
+  paper.style.setProperty('--design-w', w + 'px');
+  paper.style.setProperty('--design-h', h + 'px');
   paper.style.transform = `scale(${s})`;
 }
 

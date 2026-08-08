@@ -31,6 +31,7 @@ body{
    vector/SVG, so it stays crisp at any scale, small screens to 4K. */
 #paper{
   position:relative;
+  flex:none;               /* keep the authored design size; scaling is done via transform */
   width:var(--design-w, 960px);
   height:var(--design-h, 620px);
   transform-origin:center center;
