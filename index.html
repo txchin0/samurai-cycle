@@ -194,20 +194,8 @@
           <div id="popup"></div>
         </div>
 
-        <!-- On-screen note buttons (shown on touch devices) -->
-        <div id="notepad" aria-label="On-screen note buttons">
-          <div class="note-row">
-            <button class="note-btn" type="button" data-note="A" aria-label="Strike A">A</button>
-            <button class="note-btn" type="button" data-note="B" aria-label="Strike B">B</button>
-            <button class="note-btn" type="button" data-note="C" aria-label="Strike C">C</button>
-            <button class="note-btn" type="button" data-note="D" aria-label="Strike D">D</button>
-          </div>
-          <div class="note-row">
-            <button class="note-btn" type="button" data-note="E" aria-label="Strike E">E</button>
-            <button class="note-btn" type="button" data-note="F" aria-label="Strike F">F</button>
-            <button class="note-btn" type="button" data-note="G" aria-label="Strike G">G</button>
-          </div>
-        </div>
+        <!-- Reserves space in the arena for the fixed full-width note pad -->
+        <div id="notepad-spacer"></div>
 
         <button class="ink-btn ghost tiny quit" data-go="menu">quit</button>
       </section>
@@ -228,6 +216,21 @@
 
     </div><!-- /stage -->
   </div><!-- /paper -->
+
+  <!-- On-screen note buttons (fixed to the bottom of the viewport on touch devices) -->
+  <div id="notepad" aria-label="On-screen note buttons">
+    <div class="note-row">
+      <button class="note-btn" type="button" data-note="A" aria-label="Strike A">A</button>
+      <button class="note-btn" type="button" data-note="B" aria-label="Strike B">B</button>
+      <button class="note-btn" type="button" data-note="C" aria-label="Strike C">C</button>
+      <button class="note-btn" type="button" data-note="D" aria-label="Strike D">D</button>
+    </div>
+    <div class="note-row">
+      <button class="note-btn" type="button" data-note="E" aria-label="Strike E">E</button>
+      <button class="note-btn" type="button" data-note="F" aria-label="Strike F">F</button>
+      <button class="note-btn" type="button" data-note="G" aria-label="Strike G">G</button>
+    </div>
+  </div>
 
   <script src="game.js"></script>
 </body>

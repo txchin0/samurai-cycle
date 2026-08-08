@@ -67,8 +67,9 @@ then visit <http://localhost:8731>.
 - The game switches to a dedicated portrait layout on phones and fills the
   browser viewport edge-to-edge (a 620-wide design whose height stretches to
   match the screen), and keeps the existing landscape layout on wider screens.
-- On touch devices without a keyboard, a 7-button note pad appears below the
-  arena: two rows in portrait, one row in landscape.
+- On touch devices without a keyboard, a 7-button note pad appears as a bar
+  along the bottom of the screen spanning its full width: two rows in
+  portrait, one row in landscape.
 - If you use a phone with a Bluetooth keyboard (or a touch laptop where you'd
   rather tap), override the detection with **Options → Touch keys**.
 

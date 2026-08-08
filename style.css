@@ -138,14 +138,27 @@ body{
 
 /* ---- on-screen note pad ---- */
 #notepad{
+  position:fixed;
+  left:0;
+  right:0;
+  bottom:0;
+  z-index:60;
   display:none;
   gap:10px;
-  padding:12px 14px 18px;
+  padding:10px 12px;
+  padding-bottom:max(12px, env(safe-area-inset-bottom));
   border-top:3px solid var(--ink);
   background:var(--paper-2);
+  box-shadow:0 -6px 18px rgba(0,0,0,.28);
 }
 #notepad.show{display:grid}
 .note-row{display:contents}
+/* keeps the arena content clear of the fixed full-width note pad */
+#notepad-spacer{display:none}
+body.touch-keys #notepad-spacer{
+  display:block;
+  height:var(--touch-pad-h-design, 0px);
+}
 
 /* landscape: one row of seven; portrait: two rows (4 + 3, centred) */
 body:not(.portrait) #notepad.show{grid-template-columns:repeat(7,1fr)}
@@ -159,7 +172,7 @@ body.portrait .note-row:nth-child(2) .note-btn:nth-child(3){grid-column:4}
   font-weight:800;
   font-size:2rem;
   letter-spacing:.05em;
-  height:88px;
+  height:72px;
   border:3px solid var(--ink);
   border-radius:4px 14px 6px 16px;
   background:var(--paper);

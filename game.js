@@ -426,6 +426,8 @@ const DESIGN = {
   portrait:  { w: 620 },       // height is stretched to fill the screen
 };
 
+let currentScale = 1;          // last scale applied by fitToViewport
+
 function fitToViewport() {
   const paper = $('#paper');
   // Layout viewport, not window.inner*, so browser zoom/toolbars can't skew it.
@@ -455,6 +457,8 @@ function fitToViewport() {
   paper.style.setProperty('--design-w', w + 'px');
   paper.style.setProperty('--design-h', h + 'px');
   paper.style.transform = `scale(${s})`;
+  currentScale = s;
+  updatePadSpacer();
 }
 
 /* ================================================================== */
@@ -475,6 +479,15 @@ function refreshNotePad() {
   const showPad = state.screen === 'game' && prefersTouchKeys();
   $('#notepad').classList.toggle('show', showPad);
   document.body.classList.toggle('touch-keys', showPad);
+  updatePadSpacer();
+}
+
+// The note pad is fixed to the viewport (unscaled), so reserve its physical
+// height inside the scaled paper so the arena never hides behind it.
+function updatePadSpacer() {
+  const pad = $('#notepad');
+  const h = pad.classList.contains('show') ? pad.offsetHeight : 0;
+  document.body.style.setProperty('--touch-pad-h-design', (h / currentScale) + 'px');
 }
 
 window.addEventListener('resize', fitToViewport);
