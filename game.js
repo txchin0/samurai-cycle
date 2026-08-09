@@ -23,12 +23,18 @@ const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
 const PREPARE_MS = 2600;      // calm "ready" phase before the first demon
 
 /* ------------------------------------------------------------------ */
-const settings = {
+const OPTIONS_KEY = 'samurai-options';
+const OPTIONS_DEFAULTS = {
   cycle: 'fourths',
   sound: true,
   showUI: true,
   touchKeys: 'auto',       // 'auto' | 'show' | 'hide'
   reaction: DIFFICULTY.medium,
+  customReaction: 1000,    // last custom slider value, ms
+};
+
+const settings = {
+  ...OPTIONS_DEFAULTS,
 };
 
 const state = {
@@ -48,6 +54,49 @@ const state = {
   demonEl: null,
   awaiting: false,      // true while a demon is on screen expecting input
 };
+
+/* ---- persisted options ---- */
+function clampMs(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(3000, Math.max(300, Math.round(n)));
+}
+
+function loadOptions() {
+  let raw = null;
+  try {
+    raw = JSON.parse(localStorage.getItem(OPTIONS_KEY));
+  } catch (e) { /* missing/corrupt storage → defaults */ }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
+
+  if (Object.prototype.hasOwnProperty.call(CYCLES, raw.cycle)) {
+    settings.cycle = raw.cycle;
+  }
+  if (typeof raw.showUI === 'boolean') settings.showUI = raw.showUI;
+  if (typeof raw.sound === 'boolean') settings.sound = raw.sound;
+  if (['auto', 'show', 'hide'].includes(raw.touchKeys)) {
+    settings.touchKeys = raw.touchKeys;
+  }
+
+  const reaction = clampMs(raw.reaction);
+  if (reaction !== null) settings.reaction = reaction;
+
+  const customReaction = clampMs(raw.customReaction);
+  if (customReaction !== null) settings.customReaction = customReaction;
+}
+
+function saveOptions() {
+  try {
+    localStorage.setItem(OPTIONS_KEY, JSON.stringify({
+      cycle: settings.cycle,
+      showUI: settings.showUI,
+      sound: settings.sound,
+      touchKeys: settings.touchKeys,
+      reaction: settings.reaction,
+      customReaction: settings.customReaction,
+    }));
+  } catch (e) { /* private mode / quota errors should never break play */ }
+}
 
 /* ---- element helpers ---- */
 const $ = (sel) => document.querySelector(sel);
@@ -356,6 +405,7 @@ document.querySelectorAll('.diff').forEach((btn) => {
     }
     panel.classList.add('hidden');
     settings.reaction = DIFFICULTY[d];
+    saveOptions();
     startGame();
   });
 });
@@ -363,11 +413,14 @@ document.querySelectorAll('.diff').forEach((btn) => {
 // custom slider
 const range = $('#custom-range');
 range.addEventListener('input', () => {
+  settings.customReaction = Math.round(Number(range.value) * 1000);
   $('#custom-val').textContent = Number(range.value).toFixed(1);
   $('#custom-summary').textContent = Number(range.value).toFixed(1) + 's window';
+  saveOptions();
 });
 $('#custom-begin').addEventListener('click', () => {
   settings.reaction = Math.round(Number(range.value) * 1000);
+  saveOptions();
   startGame();
 });
 
@@ -384,6 +437,7 @@ function refreshCycleDesc() { $('#cycle-desc').textContent = cycleDescs[settings
 document.querySelectorAll('#cycle-toggle .toggle-opt').forEach((b) => {
   b.addEventListener('click', () => {
     settings.cycle = b.dataset.cycle;
+    saveOptions();
     document.querySelectorAll('#cycle-toggle .toggle-opt')
       .forEach((x) => x.classList.toggle('active', x === b));
     refreshCycleDesc();
@@ -393,6 +447,7 @@ document.querySelectorAll('#cycle-toggle .toggle-opt').forEach((b) => {
 document.querySelectorAll('#ui-toggle .toggle-opt').forEach((b) => {
   b.addEventListener('click', () => {
     settings.showUI = b.dataset.ui === 'on';
+    saveOptions();
     document.querySelectorAll('#ui-toggle .toggle-opt')
       .forEach((x) => x.classList.toggle('active', x === b));
   });
@@ -401,6 +456,7 @@ document.querySelectorAll('#ui-toggle .toggle-opt').forEach((b) => {
 document.querySelectorAll('#sound-toggle .toggle-opt').forEach((b) => {
   b.addEventListener('click', () => {
     settings.sound = b.dataset.sound === 'on';
+    saveOptions();
     document.querySelectorAll('#sound-toggle .toggle-opt')
       .forEach((x) => x.classList.toggle('active', x === b));
     if (settings.sound) beep(NOTE_FREQ.A, 0.1);
@@ -410,11 +466,28 @@ document.querySelectorAll('#sound-toggle .toggle-opt').forEach((b) => {
 document.querySelectorAll('#touch-toggle .toggle-opt').forEach((b) => {
   b.addEventListener('click', () => {
     settings.touchKeys = b.dataset.touch;
+    saveOptions();
     document.querySelectorAll('#touch-toggle .toggle-opt')
       .forEach((x) => x.classList.toggle('active', x === b));
     refreshNotePad();
   });
 });
+
+function syncOptionsUI() {
+  document.querySelectorAll('#cycle-toggle .toggle-opt')
+    .forEach((x) => x.classList.toggle('active', x.dataset.cycle === settings.cycle));
+  document.querySelectorAll('#ui-toggle .toggle-opt')
+    .forEach((x) => x.classList.toggle('active', x.dataset.ui === (settings.showUI ? 'on' : 'off')));
+  document.querySelectorAll('#sound-toggle .toggle-opt')
+    .forEach((x) => x.classList.toggle('active', x.dataset.sound === (settings.sound ? 'on' : 'off')));
+  document.querySelectorAll('#touch-toggle .toggle-opt')
+    .forEach((x) => x.classList.toggle('active', x.dataset.touch === settings.touchKeys));
+
+  range.value = (settings.customReaction / 1000).toFixed(1);
+  $('#custom-val').textContent = (settings.customReaction / 1000).toFixed(1);
+  $('#custom-summary').textContent = (settings.customReaction / 1000).toFixed(1) + 's window';
+  refreshCycleDesc();
+}
 
 /* ================================================================== */
 /*  FIT-TO-VIEWPORT SCALING                                           */
@@ -499,7 +572,8 @@ window.addEventListener('orientationchange', fitToViewport);
 });
 
 /* ---- init ---- */
+loadOptions();
+syncOptionsUI();
 $('#best').textContent = state.best;
-refreshCycleDesc();
 fitToViewport();
 show('menu');
