@@ -19,6 +19,9 @@ const DIFFICULTY = {          // reaction window in ms
 
 const SPAWN_MIN = 1800;       // random delay before a demon appears (ms)
 const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
+const CUSTOM_SPAWN_MIN = 300; // clamp for custom spawn delays (ms)
+const CUSTOM_SPAWN_MAX = 8000;
+const CUSTOM_SPAWN_SD = 0.3;  // std dev as a fraction of the chosen mean
 
 const PREPARE_MS = 2600;      // calm "ready" phase before the first demon
 
@@ -31,6 +34,7 @@ const OPTIONS_DEFAULTS = {
   touchKeys: 'auto',       // 'auto' | 'show' | 'hide'
   reaction: DIFFICULTY.medium,
   customReaction: 1000,    // last custom slider value, ms
+  customSpawnAvg: 2700,    // last custom spawn-average value, ms
 };
 
 const settings = {
@@ -40,6 +44,7 @@ const settings = {
 const state = {
   screen: 'menu',
   playing: false,
+  custom: false,        // true while playing a custom-difficulty run
   current: null,        // letter currently displayed
   answer: null,         // letter the player must press
   score: 0,
@@ -60,6 +65,12 @@ function clampMs(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
   return Math.min(3000, Math.max(300, Math.round(n)));
+}
+
+function clampSpawnMs(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(5000, Math.max(1000, Math.round(n)));
 }
 
 function loadOptions() {
@@ -83,6 +94,9 @@ function loadOptions() {
 
   const customReaction = clampMs(raw.customReaction);
   if (customReaction !== null) settings.customReaction = customReaction;
+
+  const customSpawnAvg = clampSpawnMs(raw.customSpawnAvg);
+  if (customSpawnAvg !== null) settings.customSpawnAvg = customSpawnAvg;
 }
 
 function saveOptions() {
@@ -94,6 +108,7 @@ function saveOptions() {
       touchKeys: settings.touchKeys,
       reaction: settings.reaction,
       customReaction: settings.customReaction,
+      customSpawnAvg: settings.customSpawnAvg,
     }));
   } catch (e) { /* private mode / quota errors should never break play */ }
 }
@@ -179,9 +194,24 @@ function beginPrepare() {
 }
 
 function scheduleSpawn() {
-  const delay = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+  const delay = state.custom
+    ? randomSpawnDelay()
+    : SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
   hidePrompt();
   state.spawnTimer = setTimeout(spawnDemon, delay);
+}
+
+// Custom-mode spawn pacing: a normal distribution around the chosen average,
+// clamped so delays stay playable (no instant or absurdly long pauses).
+function randomSpawnDelay() {
+  const mean = settings.customSpawnAvg;
+  const sd = CUSTOM_SPAWN_SD * mean;
+  let u = 0;
+  let v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  const z = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  return Math.min(CUSTOM_SPAWN_MAX, Math.max(CUSTOM_SPAWN_MIN, mean + sd * z));
 }
 
 function spawnDemon() {
@@ -408,6 +438,7 @@ document.querySelectorAll('.diff').forEach((btn) => {
     }
     panel.classList.add('hidden');
     settings.reaction = DIFFICULTY[d];
+    state.custom = false;
     saveOptions();
     startGame();
   });
@@ -418,11 +449,26 @@ const range = $('#custom-range');
 range.addEventListener('input', () => {
   settings.customReaction = Math.round(Number(range.value) * 1000);
   $('#custom-val').textContent = Number(range.value).toFixed(1);
-  $('#custom-summary').textContent = Number(range.value).toFixed(1) + 's window';
+  refreshCustomSummary();
+  saveOptions();
+});
+
+// custom spawn slider
+const spawnRange = $('#custom-spawn');
+function refreshCustomSummary() {
+  $('#custom-summary').textContent =
+    Number(range.value).toFixed(1) + 's window · ' +
+    Number(spawnRange.value).toFixed(1) + 's pace';
+}
+spawnRange.addEventListener('input', () => {
+  settings.customSpawnAvg = Math.round(Number(spawnRange.value) * 1000);
+  $('#custom-spawn-val').textContent = Number(spawnRange.value).toFixed(1);
+  refreshCustomSummary();
   saveOptions();
 });
 $('#custom-begin').addEventListener('click', () => {
   settings.reaction = Math.round(Number(range.value) * 1000);
+  state.custom = true;
   saveOptions();
   startGame();
 });
@@ -488,7 +534,9 @@ function syncOptionsUI() {
 
   range.value = (settings.customReaction / 1000).toFixed(1);
   $('#custom-val').textContent = (settings.customReaction / 1000).toFixed(1);
-  $('#custom-summary').textContent = (settings.customReaction / 1000).toFixed(1) + 's window';
+  spawnRange.value = (settings.customSpawnAvg / 1000).toFixed(1);
+  $('#custom-spawn-val').textContent = (settings.customSpawnAvg / 1000).toFixed(1);
+  refreshCustomSummary();
   refreshCycleDesc();
 }
 

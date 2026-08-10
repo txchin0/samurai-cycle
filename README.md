@@ -26,7 +26,8 @@ row; the cycle only tells you which note to strike next.
   - **Novice** — 2.0 s reaction window
   - **Ronin** — 1.2 s
   - **Master** — 0.7 s
-  - **Custom** — set your own window (0.3–3.0 s)
+  - **Custom** — set your own reaction window (0.3–3.0 s) and the average
+    time between monsters (1.0–5.0 s, randomized around it)
 - **Options**
   - Cycle direction: **Fourths** or **Fifths**
   - On-screen guides: **Show** or **Hide** — hiding removes the timer bar, the
