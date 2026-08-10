@@ -159,7 +159,7 @@ function startGame() {
   state.playing = true;
   state.score = 0;
   state.streak = 0;
-  state.current = CYCLES[settings.cycle][Math.floor(Math.random() * 7)];
+  state.current = null;     // first demon may carry any letter
   updateHud();
   $('#best').textContent = state.best;
   $('#samurai').className = 'idle';
@@ -187,6 +187,11 @@ function scheduleSpawn() {
 function spawnDemon() {
   if (!state.playing) return;
 
+  // Each demon carries a random letter (never the same one twice in a row);
+  // strike the NEXT note in the cycle.
+  const cycle = CYCLES[settings.cycle];
+  const options = cycle.filter((note) => note !== state.current);
+  state.current = options[Math.floor(Math.random() * options.length)];
   state.answer = nextLetter(state.current);
   state.awaiting = true;
 
@@ -266,8 +271,6 @@ function handleKey(letter) {
     }
     updateHud();
     popup(pickCry());
-    // chain: the letter we just played becomes the new "current"
-    state.current = letter;
     scheduleSpawn();
   } else {
     // wrong note

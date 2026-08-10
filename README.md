@@ -13,11 +13,12 @@ each one by playing the **next note in the cycle** before your window runs out.
 2. Press the key for the **next letter in the chosen cycle** to slash it:
    - **Cycle of fourths:** `B → E → A → D → G → C → F → (B)`
    - **Cycle of fifths:** `B → F → C → G → D → A → E → (B)`
-3. Each correct strike chains into the next note. Keep the cycle going.
+3. Each demon carries a random letter, so every duel is a fresh test. Keep
+   the streak going.
 4. Miss the timing window, or hit the wrong note, and you fall.
 
-The letter you just played becomes the next demon's letter, so a good run
-literally walks the whole circle of fifths/fourths, over and over.
+The demon's letter is randomized on every spawn and never repeats twice in a
+row; the cycle only tells you which note to strike next.
 
 ## Menus
 
