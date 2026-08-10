@@ -70,7 +70,7 @@ function clampMs(value) {
 function clampSpawnMs(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
-  return Math.min(5000, Math.max(1000, Math.round(n)));
+  return Math.min(5000, Math.max(300, Math.round(n)));
 }
 
 function loadOptions() {
