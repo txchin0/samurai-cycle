@@ -394,6 +394,11 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && state.screen === 'game') {
     quitToMenu();
   }
+  if (state.screen === 'over' && !e.repeat &&
+      (k === 'R' || e.key === ' ' || e.key === 'Enter')) {
+    e.preventDefault();
+    startGame();
+  }
 });
 
 // On-screen note buttons (touch devices)
