@@ -33,27 +33,64 @@
       <section id="screen-difficulty" class="screen">
         <div class="brush-frame">
           <h2 class="title sm">CHOOSE YOUR PATH</h2>
-          <div class="btn-col">
-            <button class="ink-btn diff" data-diff="easy">
-              易 <span class="diff-label">NOVICE</span><small>2.0s to strike</small>
-            </button>
-            <button class="ink-btn diff" data-diff="medium">
-              中 <span class="diff-label">RONIN</span><small>1.2s to strike</small>
-            </button>
-            <button class="ink-btn diff" data-diff="hard">
-              難 <span class="diff-label">MASTER</span><small>0.7s to strike</small>
-            </button>
-            <button class="ink-btn diff ghost" data-diff="custom">
-              自 <span class="diff-label">CUSTOM</span><small id="custom-summary">set your own</small>
-            </button>
+
+          <div class="diff-tabs" id="diff-tabs">
+            <button class="diff-tab active" type="button" data-tab="normal">NORMAL</button>
+            <button class="diff-tab" type="button" data-tab="advanced">ADVANCED</button>
           </div>
 
-          <div id="custom-panel" class="hidden">
-            <label for="custom-range">Reaction window: <b id="custom-val">1.0</b>s</label>
-            <input type="range" id="custom-range" min="0.3" max="3" step="0.1" value="1.0" />
-            <label for="custom-spawn">Average time between monsters: <b id="custom-spawn-val">2.7</b>s</label>
-            <input type="range" id="custom-spawn" min="0.3" max="5" step="0.1" value="2.7" />
-            <button class="ink-btn tiny" id="custom-begin">BEGIN</button>
+          <div id="diff-panels">
+            <div class="diff-panel active" id="panel-normal">
+              <div class="btn-col">
+                <button class="ink-btn diff" data-diff="easy">
+                  易 <span class="diff-label">NOVICE</span><small>2.0s to strike</small>
+                </button>
+                <button class="ink-btn diff" data-diff="medium">
+                  中 <span class="diff-label">RONIN</span><small>1.2s to strike</small>
+                </button>
+                <button class="ink-btn diff" data-diff="hard">
+                  難 <span class="diff-label">MASTER</span><small>0.7s to strike</small>
+                </button>
+                <button class="ink-btn diff ghost" data-diff="custom">
+                  自 <span class="diff-label">CUSTOM</span><small id="custom-summary">set your own</small>
+                </button>
+              </div>
+
+              <div id="custom-panel" class="hidden">
+                <label for="custom-range">Reaction window: <b id="custom-val">1.0</b>s</label>
+                <input type="range" id="custom-range" min="0.3" max="3" step="0.1" value="1.0" />
+                <label for="custom-spawn">Average time between monsters: <b id="custom-spawn-val">2.7</b>s</label>
+                <input type="range" id="custom-spawn" min="0.3" max="5" step="0.1" value="2.7" />
+                <button class="ink-btn tiny" id="custom-begin">BEGIN</button>
+              </div>
+            </div>
+
+            <div class="diff-panel" id="panel-advanced">
+              <div class="btn-col">
+                <button class="ink-btn diff" data-diff="easy" data-mode="advanced">
+                  易 <span class="diff-label">NOVICE</span><small>2 monsters · 3.0s</small>
+                </button>
+                <button class="ink-btn diff" data-diff="medium" data-mode="advanced">
+                  中 <span class="diff-label">RONIN</span><small>3 monsters · 3.6s</small>
+                </button>
+                <button class="ink-btn diff" data-diff="hard" data-mode="advanced">
+                  難 <span class="diff-label">MASTER</span><small>3 monsters · 2.4s</small>
+                </button>
+                <button class="ink-btn diff ghost" data-diff="custom" data-mode="advanced">
+                  自 <span class="diff-label">CUSTOM</span><small id="advanced-custom-summary">set your own</small>
+                </button>
+              </div>
+
+              <div id="advanced-custom-panel" class="hidden">
+                <label for="advanced-range">Reaction window (whole wave): <b id="advanced-val">3.0</b>s</label>
+                <input type="range" id="advanced-range" min="0.5" max="6" step="0.1" value="3.0" />
+                <label for="advanced-spawn">Average time between waves: <b id="advanced-spawn-val">3.0</b>s</label>
+                <input type="range" id="advanced-spawn" min="0.3" max="5" step="0.1" value="3.0" />
+                <label for="advanced-monsters">Monsters per wave: <b id="advanced-monsters-val">3</b></label>
+                <input type="range" id="advanced-monsters" min="2" max="5" step="1" value="3" />
+                <button class="ink-btn tiny" id="advanced-begin">BEGIN</button>
+              </div>
+            </div>
           </div>
 
           <button class="ink-btn ghost tiny back" data-go="menu">← back</button>
@@ -150,9 +187,7 @@
 
           <!-- Instruction prompt -->
           <div id="prompt">
-            <span id="prompt-cur">?</span>
-            <span id="prompt-arrow">➜</span>
-            <span id="prompt-hint">press ?</span>
+            <span id="prompt-hint">B → E → A → D → G → C → F</span>
           </div>
 
           <!-- Player samurai — seen from behind, facing up the path -->

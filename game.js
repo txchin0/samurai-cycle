@@ -17,6 +17,12 @@ const DIFFICULTY = {          // reaction window in ms
   hard:    700,
 };
 
+const ADVANCED_DIFFICULTY = { // monsters per wave + total wave time in ms
+  easy:   { monsters: 2, time: 3000 },
+  medium: { monsters: 3, time: 3600 },
+  hard:   { monsters: 3, time: 2400 },
+};
+
 const SPAWN_MIN = 1800;       // random delay before a demon appears (ms)
 const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
 const CUSTOM_SPAWN_MIN = 300; // clamp for custom spawn delays (ms)
@@ -24,6 +30,8 @@ const CUSTOM_SPAWN_MAX = 8000;
 const CUSTOM_SPAWN_SD = 0.3;  // std dev as a fraction of the chosen mean
 
 const PREPARE_MS = 2600;      // calm "ready" phase before the first demon
+const ADVANCED_MONSTERS_MIN = 2;
+const ADVANCED_MONSTERS_MAX = 5;
 
 /* ------------------------------------------------------------------ */
 const OPTIONS_KEY = 'samurai-options';
@@ -35,6 +43,9 @@ const OPTIONS_DEFAULTS = {
   reaction: DIFFICULTY.medium,
   customReaction: 1000,    // last custom slider value, ms
   customSpawnAvg: 2700,    // last custom spawn-average value, ms
+  advancedReaction: 3000,  // last advanced custom wave-time value, ms
+  advancedSpawnAvg: 3000,  // last advanced custom between-wave value, ms
+  advancedMonsters: 3,     // last advanced custom monsters-per-wave value
 };
 
 const settings = {
@@ -45,32 +56,43 @@ const state = {
   screen: 'menu',
   playing: false,
   custom: false,        // true while playing a custom-difficulty run
+  mode: 'normal',       // 'normal' | 'advanced'
   current: null,        // letter currently displayed
   answer: null,         // letter the player must press
+  monsters: [],         // active wave: {el, note, answer}
+  targetIndex: 0,       // index of the monster the player must strike next
+  waveTime: 0,          // total reaction window for the current demon/wave
+  monsterCount: 1,      // monsters spawned per wave in advanced mode
   score: 0,
   streak: 0,
   best: Number(localStorage.getItem('samurai-best') || 0),
+  bestAdvanced: Number(localStorage.getItem('samurai-best-advanced') || 0),
   spawnTimer: null,
   prepareTimer: null,
   rafId: null,
   deadlineTimer: null,
   windowStart: 0,
   windowEnd: 0,
-  demonEl: null,
   awaiting: false,      // true while a demon is on screen expecting input
 };
 
 /* ---- persisted options ---- */
-function clampMs(value) {
+function clampMs(value, min = 300, max = 3000) {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
-  return Math.min(3000, Math.max(300, Math.round(n)));
+  return Math.min(max, Math.max(min, Math.round(n)));
 }
 
 function clampSpawnMs(value) {
   const n = Number(value);
   if (!Number.isFinite(n)) return null;
   return Math.min(5000, Math.max(300, Math.round(n)));
+}
+
+function clampMonsterCount(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.min(ADVANCED_MONSTERS_MAX, Math.max(ADVANCED_MONSTERS_MIN, Math.round(n)));
 }
 
 function loadOptions() {
@@ -97,6 +119,15 @@ function loadOptions() {
 
   const customSpawnAvg = clampSpawnMs(raw.customSpawnAvg);
   if (customSpawnAvg !== null) settings.customSpawnAvg = customSpawnAvg;
+
+  const advancedReaction = clampMs(raw.advancedReaction, 500, 6000);
+  if (advancedReaction !== null) settings.advancedReaction = advancedReaction;
+
+  const advancedSpawnAvg = clampSpawnMs(raw.advancedSpawnAvg);
+  if (advancedSpawnAvg !== null) settings.advancedSpawnAvg = advancedSpawnAvg;
+
+  const advancedMonsters = clampMonsterCount(raw.advancedMonsters);
+  if (advancedMonsters !== null) settings.advancedMonsters = advancedMonsters;
 }
 
 function saveOptions() {
@@ -109,6 +140,9 @@ function saveOptions() {
       reaction: settings.reaction,
       customReaction: settings.customReaction,
       customSpawnAvg: settings.customSpawnAvg,
+      advancedReaction: settings.advancedReaction,
+      advancedSpawnAvg: settings.advancedSpawnAvg,
+      advancedMonsters: settings.advancedMonsters,
     }));
   } catch (e) { /* private mode / quota errors should never break play */ }
 }
@@ -170,13 +204,27 @@ function nextLetter(letter) {
   return cyc[(i + 1) % cyc.length];
 }
 
+function cycleHint() {
+  return CYCLES[settings.cycle].join(' → ');
+}
+
+function bestKey() {
+  return state.mode === 'advanced' ? 'samurai-best-advanced' : 'samurai-best';
+}
+
+function getBest() {
+  return state.mode === 'advanced' ? state.bestAdvanced : state.best;
+}
+
 function startGame() {
   state.playing = true;
   state.score = 0;
   state.streak = 0;
   state.current = null;     // first demon may carry any letter
+  state.monsters = [];
+  state.targetIndex = 0;
   updateHud();
-  $('#best').textContent = state.best;
+  $('#best').textContent = getBest();
   $('#samurai').className = 'idle';
   $('#screen-game').classList.toggle('no-ui', !settings.showUI);
   clearDemon();
@@ -195,16 +243,24 @@ function beginPrepare() {
 
 function scheduleSpawn() {
   const delay = state.custom
-    ? randomSpawnDelay()
+    ? randomSpawnDelay(customSpawnMean())
     : SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
   hidePrompt();
-  state.spawnTimer = setTimeout(spawnDemon, delay);
+  state.spawnTimer = setTimeout(spawnNext, delay);
+}
+
+function spawnNext() {
+  if (state.mode === 'advanced') spawnWave(state.monsterCount);
+  else spawnDemon();
+}
+
+function customSpawnMean() {
+  return state.mode === 'advanced' ? settings.advancedSpawnAvg : settings.customSpawnAvg;
 }
 
 // Custom-mode spawn pacing: a normal distribution around the chosen average,
 // clamped so delays stay playable (no instant or absurdly long pauses).
-function randomSpawnDelay() {
-  const mean = settings.customSpawnAvg;
+function randomSpawnDelay(mean) {
   const sd = CUSTOM_SPAWN_SD * mean;
   let u = 0;
   let v = 0;
@@ -221,36 +277,77 @@ function spawnDemon() {
   // strike the NEXT note in the cycle.
   const cycle = CYCLES[settings.cycle];
   const options = cycle.filter((note) => note !== state.current);
-  state.current = options[Math.floor(Math.random() * options.length)];
-  state.answer = nextLetter(state.current);
+  const note = options[Math.floor(Math.random() * options.length)];
+  state.current = note;
+  state.monsters = [{ note, answer: nextLetter(note), el: null }];
+  state.targetIndex = 0;
   state.awaiting = true;
 
-  // build demon element
+  const demon = createDemon(note, 0);
+  $('#enemy-zone').appendChild(demon);
+  state.monsters[0].el = demon;
+  showPrompt();
+  startWaveTimer();
+}
+
+function spawnWave(count) {
+  if (!state.playing) return;
+
+  const notes = pickDistinctNotes(CYCLES[settings.cycle], count, state.current);
+  state.monsters = notes.map((note) => ({ note, answer: nextLetter(note), el: null }));
+  state.current = notes[notes.length - 1];
+  state.targetIndex = 0;
+  state.awaiting = true;
+
   const zone = $('#enemy-zone');
+  state.monsters.forEach((monster, depth) => {
+    const demon = createDemon(monster.note, depth);
+    zone.appendChild(demon);
+    monster.el = demon;
+  });
+  showPrompt();
+  startWaveTimer();
+}
+
+function pickDistinctNotes(cycle, count, avoid) {
+  const pool = cycle.slice();
+  const avoidIndex = pool.indexOf(avoid);
+  if (avoid && avoidIndex !== -1) pool.splice(avoidIndex, 1);
+  const picked = [];
+  while (picked.length < count) {
+    const i = Math.floor(Math.random() * pool.length);
+    picked.push(pool.splice(i, 1)[0]);
+  }
+  return picked;
+}
+
+function createDemon(note, depth) {
   const demon = document.createElement('div');
-  demon.className = 'demon enter';
+  demon.className = 'demon enter depth-' + depth;
   // appear on the path, roughly centred ahead of the samurai
   const x = 50 + (Math.random() * 16 - 8);      // 42%–58%
   demon.style.left = x + '%';
   demon.innerHTML = `
-    <span class="arm l"></span><span class="arm r"></span>
-    <span class="leg l"></span><span class="leg r"></span>
-    <div class="body">${state.current}
-      <span class="eye l"></span><span class="eye r"></span>
-    </div>
-    <span class="cut"></span>`;
-  zone.appendChild(demon);
-  state.demonEl = demon;
+    <div class="demon-visual">
+      <span class="arm l"></span><span class="arm r"></span>
+      <span class="leg l"></span><span class="leg r"></span>
+      <div class="body">${note}
+        <span class="eye l"></span><span class="eye r"></span>
+      </div>
+      <span class="cut"></span>
+    </div>`;
+  return demon;
+}
 
-  // show prompt
-  $('#prompt-cur').textContent = state.current;
-  $('#prompt-hint').textContent = 'strike ' + state.answer;
+function showPrompt() {
+  $('#prompt-hint').textContent = cycleHint();
   $('#prompt').classList.add('show');
+}
 
-  // start reaction timer
+function startWaveTimer() {
   const now = performance.now();
   state.windowStart = now;
-  state.windowEnd = now + settings.reaction;
+  state.windowEnd = now + state.waveTime;
   const fill = $('#timer-fill');
   const track = $('#timer-track');
   track.classList.add('show');
@@ -259,7 +356,7 @@ function spawnDemon() {
   // Authoritative deadline: a timer that fires even if the tab is
   // backgrounded (requestAnimationFrame pauses when not compositing).
   clearTimeout(state.deadlineTimer);
-  state.deadlineTimer = setTimeout(timeUp, settings.reaction);
+  state.deadlineTimer = setTimeout(timeUp, state.waveTime);
 
   runTimer();   // visual bar only
 }
@@ -269,7 +366,7 @@ function runTimer() {
   const fill = $('#timer-fill');
   const tick = () => {
     const remain = state.windowEnd - performance.now();
-    const frac = Math.max(0, remain / settings.reaction);
+    const frac = Math.max(0, remain / state.waveTime);
     fill.style.transform = `scaleX(${frac})`;
     if (remain > 0 && state.awaiting) {
       state.rafId = requestAnimationFrame(tick);
@@ -285,23 +382,30 @@ function hidePrompt() {
 
 function handleKey(letter) {
   if (!state.playing || !state.awaiting) return;
-  state.awaiting = false;
-  cancelAnimationFrame(state.rafId);
-  clearTimeout(state.deadlineTimer);
+  const target = state.monsters[state.targetIndex];
+  if (!target) return;
 
-  if (letter === state.answer) {
+  if (letter === target.answer) {
     // HIT!
     slashSound(letter);
-    strike();
+    strikeMonster(target.el);
     state.score++;
     state.streak++;
-    if (state.score > state.best) {
-      state.best = state.score;
-      localStorage.setItem('samurai-best', state.best);
+    if (state.score > getBest()) {
+      if (state.mode === 'advanced') state.bestAdvanced = state.score;
+      else state.best = state.score;
+      localStorage.setItem(bestKey(), state.score);
     }
     updateHud();
     popup(pickCry());
-    scheduleSpawn();
+    state.targetIndex++;
+    if (state.targetIndex >= state.monsters.length) {
+      state.awaiting = false;
+      cancelAnimationFrame(state.rafId);
+      clearTimeout(state.deadlineTimer);
+      hidePrompt();
+      scheduleSpawn();
+    }
   } else {
     // wrong note
     gameOver('WRONG STRIKE');
@@ -314,7 +418,7 @@ function timeUp() {
   gameOver('TOO SLOW');
 }
 
-function strike() {
+function strikeMonster(el) {
   const sam = $('#samurai');
   sam.classList.remove('strike');
   void sam.offsetWidth;         // reflow to restart animation
@@ -326,14 +430,12 @@ function strike() {
   void slash.offsetWidth;
   slash.classList.add('go');
 
-  if (state.demonEl) {
-    state.demonEl.classList.remove('enter');
-    state.demonEl.classList.add('slain');
-    const dead = state.demonEl;
+  if (el) {
+    el.classList.remove('enter');
+    el.classList.add('slain');
+    const dead = el;
     setTimeout(() => dead.remove(), 480);
-    state.demonEl = null;
   }
-  hidePrompt();
 }
 
 const CRIES = ['斬！', 'SLASH!', '一閃!', 'HA!', '切！'];
@@ -349,7 +451,8 @@ function popup(text) {
 
 function clearDemon() {
   $('#enemy-zone').innerHTML = '';
-  state.demonEl = null;
+  state.monsters = [];
+  state.targetIndex = 0;
 }
 
 function gameOver(reason) {
@@ -364,11 +467,15 @@ function gameOver(reason) {
 
   // samurai falls, demon lands a hit
   $('#samurai').classList.add('fall');
-  if (state.demonEl) state.demonEl.classList.add('wobble');
+  state.monsters.forEach((monster) => {
+    if (monster.el && !monster.el.classList.contains('slain')) {
+      monster.el.classList.add('wobble');
+    }
+  });
 
   $('#over-title').textContent = reason;
   $('#final-score').textContent = state.score;
-  $('#final-best').textContent = state.best;
+  $('#final-best').textContent = getBest();
 
   setTimeout(() => {
     clearDemon();
@@ -378,7 +485,7 @@ function gameOver(reason) {
 
 function updateHud() {
   $('#score').textContent = state.score;
-  $('#best').textContent = state.best;
+  $('#best').textContent = getBest();
   $('#streak').textContent = state.streak;
 }
 
@@ -432,18 +539,81 @@ function quitToMenu() {
   show('menu');
 }
 
+// difficulty tabs
+let diffTab = 'normal';
+function setDiffTab(tab) {
+  if (tab !== 'normal' && tab !== 'advanced') return;
+  diffTab = tab;
+  document.querySelectorAll('.diff-tab')
+    .forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.diff-panel')
+    .forEach((p) => p.classList.toggle('active', p.id === 'panel-' + tab));
+}
+
+document.querySelectorAll('.diff-tab').forEach((btn) => {
+  btn.addEventListener('click', () => setDiffTab(btn.dataset.tab));
+});
+
+// swipe between difficulty tabs; ignore swipes that start on a slider
+const DIFF_SWIPE_DISTANCE = 60;
+let swipeStart = null;
+let suppressNextClick = false;
+function suppressClickOnce() {
+  suppressNextClick = true;
+  setTimeout(() => { suppressNextClick = false; }, 600);
+}
+document.addEventListener('click', (e) => {
+  if (suppressNextClick) {
+    e.stopPropagation();
+    e.preventDefault();
+    suppressNextClick = false;
+  }
+}, true);
+
+const difficultyScreen = $('#screen-difficulty');
+difficultyScreen.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('input[type="range"]')) return;
+  swipeStart = { x: e.clientX, y: e.clientY };
+});
+difficultyScreen.addEventListener('pointermove', (e) => {
+  if (!swipeStart) return;
+  const dx = e.clientX - swipeStart.x;
+  const dy = e.clientY - swipeStart.y;
+  if (Math.abs(dx) >= DIFF_SWIPE_DISTANCE && Math.abs(dx) > Math.abs(dy) * 1.5) {
+    const next = dx < 0 ? 'advanced' : 'normal';
+    if (next !== diffTab) {
+      setDiffTab(next);
+      suppressClickOnce();
+    }
+    swipeStart = null;
+  }
+});
+difficultyScreen.addEventListener('pointerup', () => { swipeStart = null; });
+difficultyScreen.addEventListener('pointercancel', () => { swipeStart = null; });
+
 // difficulty buttons
 document.querySelectorAll('.diff').forEach((btn) => {
   btn.addEventListener('click', () => {
     const d = btn.dataset.diff;
-    const panel = $('#custom-panel');
+    const mode = btn.dataset.mode || 'normal';
+    const panel = mode === 'advanced' ? $('#advanced-custom-panel') : $('#custom-panel');
     if (d === 'custom') {
       panel.classList.toggle('hidden');
       return;
     }
     panel.classList.add('hidden');
-    settings.reaction = DIFFICULTY[d];
-    state.custom = false;
+    if (mode === 'advanced') {
+      const cfg = ADVANCED_DIFFICULTY[d];
+      state.mode = 'advanced';
+      state.custom = false;
+      state.waveTime = cfg.time;
+      state.monsterCount = cfg.monsters;
+    } else {
+      state.mode = 'normal';
+      state.custom = false;
+      state.waveTime = DIFFICULTY[d];
+      state.monsterCount = 1;
+    }
     saveOptions();
     startGame();
   });
@@ -473,7 +643,50 @@ spawnRange.addEventListener('input', () => {
 });
 $('#custom-begin').addEventListener('click', () => {
   settings.reaction = Math.round(Number(range.value) * 1000);
+  state.mode = 'normal';
   state.custom = true;
+  state.waveTime = settings.reaction;
+  state.monsterCount = 1;
+  saveOptions();
+  startGame();
+});
+
+// advanced custom controls
+const advancedRange = $('#advanced-range');
+const advancedSpawnRange = $('#advanced-spawn');
+const advancedMonstersRange = $('#advanced-monsters');
+function refreshAdvancedSummary() {
+  $('#advanced-custom-summary').textContent =
+    Number(advancedRange.value).toFixed(1) + 's wave · ' +
+    Number(advancedSpawnRange.value).toFixed(1) + 's pace · ' +
+    advancedMonstersRange.value + ' monsters';
+}
+advancedRange.addEventListener('input', () => {
+  settings.advancedReaction = Math.round(Number(advancedRange.value) * 1000);
+  $('#advanced-val').textContent = Number(advancedRange.value).toFixed(1);
+  refreshAdvancedSummary();
+  saveOptions();
+});
+advancedSpawnRange.addEventListener('input', () => {
+  settings.advancedSpawnAvg = Math.round(Number(advancedSpawnRange.value) * 1000);
+  $('#advanced-spawn-val').textContent = Number(advancedSpawnRange.value).toFixed(1);
+  refreshAdvancedSummary();
+  saveOptions();
+});
+advancedMonstersRange.addEventListener('input', () => {
+  settings.advancedMonsters = Number(advancedMonstersRange.value);
+  $('#advanced-monsters-val').textContent = advancedMonstersRange.value;
+  refreshAdvancedSummary();
+  saveOptions();
+});
+$('#advanced-begin').addEventListener('click', () => {
+  settings.advancedReaction = Math.round(Number(advancedRange.value) * 1000);
+  settings.advancedSpawnAvg = Math.round(Number(advancedSpawnRange.value) * 1000);
+  settings.advancedMonsters = Number(advancedMonstersRange.value);
+  state.mode = 'advanced';
+  state.custom = true;
+  state.waveTime = settings.advancedReaction;
+  state.monsterCount = settings.advancedMonsters;
   saveOptions();
   startGame();
 });
@@ -486,7 +699,10 @@ const cycleDescs = {
   fourths: 'B → E → A → D → G → C → F  (up a fourth)',
   fifths:  'B → F → C → G → D → A → E  (up a fifth)',
 };
-function refreshCycleDesc() { $('#cycle-desc').textContent = cycleDescs[settings.cycle]; }
+function refreshCycleDesc() {
+  $('#cycle-desc').textContent = cycleDescs[settings.cycle];
+  $('#prompt-hint').textContent = cycleHint();
+}
 
 document.querySelectorAll('#cycle-toggle .toggle-opt').forEach((b) => {
   b.addEventListener('click', () => {
@@ -542,6 +758,14 @@ function syncOptionsUI() {
   spawnRange.value = (settings.customSpawnAvg / 1000).toFixed(1);
   $('#custom-spawn-val').textContent = (settings.customSpawnAvg / 1000).toFixed(1);
   refreshCustomSummary();
+
+  advancedRange.value = (settings.advancedReaction / 1000).toFixed(1);
+  $('#advanced-val').textContent = (settings.advancedReaction / 1000).toFixed(1);
+  advancedSpawnRange.value = (settings.advancedSpawnAvg / 1000).toFixed(1);
+  $('#advanced-spawn-val').textContent = (settings.advancedSpawnAvg / 1000).toFixed(1);
+  advancedMonstersRange.value = settings.advancedMonsters;
+  $('#advanced-monsters-val').textContent = settings.advancedMonsters;
+  refreshAdvancedSummary();
   refreshCycleDesc();
 }
 
@@ -630,6 +854,6 @@ window.addEventListener('orientationchange', fitToViewport);
 /* ---- init ---- */
 loadOptions();
 syncOptionsUI();
-$('#best').textContent = state.best;
+$('#best').textContent = getBest();
 fitToViewport();
 show('menu');

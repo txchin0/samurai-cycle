@@ -204,14 +204,34 @@ body.portrait .note-row:nth-child(2) .note-btn:nth-child(3){grid-column:4}
   font-size:.8rem;opacity:.55;letter-spacing:.04em;padding:0 20px;
 }
 
+/* ---- difficulty tabs ---- */
+.diff-tabs{
+  display:flex;justify-content:center;gap:10px;
+  margin-bottom:18px;
+}
+.diff-tab{
+  font-family:inherit;font-weight:900;font-size:.95rem;letter-spacing:.12em;
+  background:var(--paper);color:var(--ink);
+  border:3px solid var(--ink);border-radius:4px 14px 6px 16px;
+  padding:8px 20px;cursor:pointer;
+  box-shadow:3px 3px 0 rgba(0,0,0,.7);
+  transition:transform .08s ease,box-shadow .08s ease,background .15s,color .15s;
+}
+.diff-tab:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(0,0,0,.7)}
+.diff-tab:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.7)}
+.diff-tab.active{background:var(--ink);color:var(--paper)}
+#diff-panels{width:100%}
+.diff-panel{display:none}
+.diff-panel.active{display:block;animation:fade .3s ease}
+
 /* ---- custom panel ---- */
-#custom-panel{
+#custom-panel, #advanced-custom-panel{
   margin-top:18px;padding:16px;
   border:2px dashed var(--ink);border-radius:8px;
   display:flex;flex-direction:column;gap:12px;align-items:center;
 }
-#custom-panel.hidden{display:none}
-#custom-panel label{font-size:.95rem;letter-spacing:.03em}
+#custom-panel.hidden, #advanced-custom-panel.hidden{display:none}
+#custom-panel label, #advanced-custom-panel label{font-size:.95rem;letter-spacing:.03em}
 input[type=range]{
   -webkit-appearance:none;appearance:none;width:220px;height:6px;
   background:var(--ink);border-radius:3px;outline:none;
@@ -277,17 +297,19 @@ input[type=range]::-moz-range-thumb{
 
 #prompt{
   position:absolute;top:44px;left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;gap:12px;
-  font-family:'Shippori Mincho',serif;font-weight:800;
+  white-space:nowrap;
   opacity:0;transition:opacity .15s;
 }
 #prompt.show{opacity:1}
-#prompt-cur{
-  font-size:2.2rem;width:52px;height:52px;line-height:48px;
-  border:4px solid var(--ink);border-radius:6px;background:var(--paper);
+#prompt-hint{
+  display:inline-block;
+  padding:8px 16px;
+  border:3px solid var(--ink);border-radius:6px;
+  background:var(--paper);
+  font-family:'Shippori Mincho',serif;font-weight:800;
+  font-size:1rem;letter-spacing:.08em;opacity:.9;
+  box-shadow:3px 3px 0 rgba(0,0,0,.5);
 }
-#prompt-arrow{font-size:1.6rem}
-#prompt-hint{font-size:1.1rem;letter-spacing:.1em;opacity:.75}
 
 #samurai{
   position:absolute;bottom:2%;left:50%;margin-left:-100px;
@@ -313,8 +335,16 @@ input[type=range]::-moz-range-thumb{
 .demon{
   position:absolute;bottom:44%;
   width:120px;height:120px;margin-left:-60px;
+  transform:scale(var(--depth-scale,1));
+  transform-origin:center bottom;
   will-change:transform;
 }
+.demon.depth-0{--depth-scale:1;bottom:44%;z-index:4}
+.demon.depth-1{--depth-scale:.78;bottom:58%;z-index:3}
+.demon.depth-2{--depth-scale:.60;bottom:70%;z-index:3}
+.demon.depth-3{--depth-scale:.48;bottom:80%;z-index:2}
+.demon.depth-4{--depth-scale:.40;bottom:88%;z-index:2}
+.demon-visual{position:absolute;inset:0}
 .demon .body{
   position:absolute;inset:0;
   background:var(--paper);
@@ -336,15 +366,16 @@ input[type=range]::-moz-range-thumb{
 .demon .leg.r{right:34px}
 
 /* approach down the path: appear small & far, then rush into view */
-.demon.enter{animation:demon-in .34s ease, wobble .5s ease-in-out .34s infinite}
+.demon.enter .demon-visual{animation:demon-in .34s ease, wobble .5s ease-in-out .34s infinite}
 @keyframes demon-in{from{transform:translateY(-70px) scale(.2);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
 @keyframes wobble{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}
 
-.demon.slain{animation:slain .45s forwards}
+.demon.slain .demon-visual{animation:slain .45s forwards}
 @keyframes slain{
   35%{transform:translateY(-8px) scale(1.12) rotate(-6deg)}
   100%{transform:translateY(70px) scale(.5) rotate(-30deg);opacity:0}
 }
+.demon.wobble .demon-visual{animation:wobble .5s ease-in-out infinite}
 /* cut-in-half line */
 .demon .cut{
   position:absolute;top:50%;left:-30%;width:160%;height:5px;background:var(--ink);
@@ -380,7 +411,12 @@ body.portrait .screen{padding:16px}
 body.portrait .brush-frame{padding:22px 28px}
 body.portrait #timer-track{top:42px}
 body.portrait #prompt{top:72px}
-body.portrait .demon{bottom:30%;width:150px;height:150px;margin-left:-75px}
+body.portrait .demon{width:150px;height:150px;margin-left:-75px}
+body.portrait .demon.depth-0{bottom:30%}
+body.portrait .demon.depth-1{bottom:42%}
+body.portrait .demon.depth-2{bottom:54%}
+body.portrait .demon.depth-3{bottom:66%}
+body.portrait .demon.depth-4{bottom:78%}
 body.portrait #samurai{margin-left:-110px}
 body.portrait #samurai svg{width:220px;height:257px}
 body.portrait #popup{top:34%}

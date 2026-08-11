@@ -13,6 +13,8 @@ each one by playing the **next note in the cycle** before your window runs out.
 2. Press the key for the **next letter in the chosen cycle** to slash it:
    - **Cycle of fourths:** `B → E → A → D → G → C → F → (B)`
    - **Cycle of fifths:** `B → F → C → G → D → A → E → (B)`
+   During play the full cycle is shown as your hint (e.g. `B → E → A → D → G → C → F`),
+   so you can work out every next note from the letters on the demons.
 3. Each demon carries a random letter, so every duel is a fresh test. Keep
    the streak going.
 4. Miss the timing window, or hit the wrong note, and you fall.
@@ -23,11 +25,21 @@ row; the cycle only tells you which note to strike next.
 ## Menus
 
 - **Start → Difficulty**
-  - **Novice** — 2.0 s reaction window
-  - **Ronin** — 1.2 s
-  - **Master** — 0.7 s
-  - **Custom** — set your own reaction window (0.3–3.0 s) and the average
-    time between monsters (1.0–5.0 s, randomized around it)
+  - **Normal** tab (default)
+    - **Novice** — 2.0 s reaction window
+    - **Ronin** — 1.2 s
+    - **Master** — 0.7 s
+    - **Custom** — set your own reaction window (0.3–3.0 s) and the average
+      time between monsters (0.3–5.0 s, randomized around it)
+  - **Advanced** tab (tap the tab or swipe horizontally on the screen)
+    - **Novice** — 2 monsters per wave, 3.0 s total wave time
+    - **Ronin** — 3 monsters per wave, 3.6 s total wave time
+    - **Master** — 3 monsters per wave, 2.4 s total wave time
+    - **Custom** — 2–5 monsters per wave, a 0.5–6.0 s whole-wave reaction
+      window, and the average time between waves (0.3–5.0 s, randomized)
+  - In Advanced, strike the monsters bottom-to-top: the nearest demon first,
+    then the smaller demons further up the path. Normal and Advanced custom
+    settings are saved separately.
 - **Options**
   - Cycle direction: **Fourths** or **Fifths**
   - On-screen guides: **Show** or **Hide** — hiding removes the timer bar, the
