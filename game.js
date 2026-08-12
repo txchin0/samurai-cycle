@@ -25,11 +25,13 @@ const ADVANCED_DIFFICULTY = { // monsters per wave + total wave time in ms
 
 const SPAWN_MIN = 1800;       // random delay before a demon appears (ms)
 const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
+const FIRST_SPAWN_MIN = 700;  // random delay before the FIRST demon (ms)
+const FIRST_SPAWN_MAX = 1300;
 const CUSTOM_SPAWN_MIN = 300; // clamp for custom spawn delays (ms)
 const CUSTOM_SPAWN_MAX = 8000;
 const CUSTOM_SPAWN_SD = 0.3;  // std dev as a fraction of the chosen mean
 
-const PREPARE_MS = 2600;      // calm "ready" phase before the first demon
+const PREPARE_MS = 1000;      // brief "ready" moment before the first demon
 const ADVANCED_MONSTERS_MIN = 2;
 const ADVANCED_MONSTERS_MAX = 5;
 
@@ -238,13 +240,15 @@ function beginPrepare() {
   hidePrompt();
   popup('集中 — ready…');
   clearTimeout(state.prepareTimer);
-  state.prepareTimer = setTimeout(scheduleSpawn, PREPARE_MS);
+  state.prepareTimer = setTimeout(() => scheduleSpawn(true), PREPARE_MS);
 }
 
-function scheduleSpawn() {
-  const delay = state.custom
-    ? randomSpawnDelay(customSpawnMean())
-    : SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+function scheduleSpawn(first = false) {
+  const delay = first
+    ? FIRST_SPAWN_MIN + Math.random() * (FIRST_SPAWN_MAX - FIRST_SPAWN_MIN)
+    : state.custom
+      ? randomSpawnDelay(customSpawnMean())
+      : SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
   hidePrompt();
   state.spawnTimer = setTimeout(spawnNext, delay);
 }
