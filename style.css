@@ -82,6 +82,14 @@ body{
 .screen.active{display:flex;animation:fade .35s ease}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 
+/* Let the difficulty screen handle horizontal swipes (tab switching) while
+   leaving vertical panning and the range sliders' native drag behavior to
+   the browser. Without this, mobile browsers claim the gesture and fire
+   pointercancel before the swipe threshold is reached. */
+#screen-difficulty{
+  touch-action:pan-y;
+}
+
 .brush-frame{
   position:relative;
   padding:30px 42px;
