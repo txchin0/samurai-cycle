@@ -116,6 +116,8 @@ then visit <http://localhost:8731>.
 
 - `index.html` — screens & markup (menu, difficulty, options, game, game‑over)
 - `style.css` — the sumi‑e / cartoon theme (paper texture, ink buttons, demons)
+- `sumie_forest.webp`, `sumie_forest_landscape.webp` — the portrait and
+  landscape gameplay backdrop images (the right one is picked for the window)
 - `js/config.js` — cycles, difficulty tables, spawn pacing, persisted options
 - `js/sound.js` — WebAudio blips (synthesized, no assets)
 - `js/game.js` — core state machine, cycle logic, timing, input, game over
@@ -134,7 +136,9 @@ settings used by Custom mode).
   portrait design size (portrait height stretches to fill the screen), then
   uniformly scaled to fit the viewport (`fitToViewport` in `js/ui.js`), so it
   fills everything from phones to 4K displays and re-fits live on resize.
-  Because the art is all vector/SVG, it stays crisp at any scale.
+  The UI art is vector/SVG so it stays crisp at any scale, while the forest
+  backdrop switches between the portrait and landscape webp images based on
+  the window shape and is zoomed to cover the play area.
 - The reaction deadline is driven by a `setTimeout`, not `requestAnimationFrame`,
   so backgrounding the tab can't freeze the timer to gain free time. The
   animated bar is purely visual.

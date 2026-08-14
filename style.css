@@ -303,6 +303,16 @@ input[type=range]::-moz-range-thumb{
 #forest{
   position:absolute;inset:0;width:100%;height:100%;
   z-index:0;pointer-events:none;
+  background-color:var(--ink);
+  background-repeat:no-repeat;
+  background-position:center bottom;
+  background-size:cover;
+}
+body.portrait #forest{
+  background-image:url(sumie_forest.webp);
+}
+body:not(.portrait) #forest{
+  background-image:url(sumie_forest_landscape.webp);
 }
 
 #timer-track{

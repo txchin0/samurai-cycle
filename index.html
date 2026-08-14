@@ -168,35 +168,7 @@
 
         <div id="arena">
           <!-- Forest path backdrop -->
-          <svg id="forest" viewBox="0 0 800 450" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-            <defs>
-              <g id="pine">
-                <rect x="-4" y="-30" width="8" height="30" fill="#111"/>
-                <polygon points="-35,-30 35,-30 0,-72" fill="#111"/>
-                <polygon points="-27,-58 27,-58 0,-96" fill="#111"/>
-                <polygon points="-18,-84 18,-84 0,-120" fill="#111"/>
-              </g>
-            </defs>
-            <!-- moon -->
-            <circle cx="400" cy="86" r="46" fill="#000" opacity="0.05"/>
-            <circle cx="400" cy="86" r="46" fill="none" stroke="#111" stroke-width="3" opacity="0.5"/>
-            <circle cx="386" cy="74" r="8" fill="#111" opacity="0.14"/>
-            <circle cx="414" cy="98" r="5" fill="#111" opacity="0.14"/>
-            <!-- path -->
-            <polygon points="330,450 470,450 420,150 380,150" fill="#111" opacity="0.05"/>
-            <line x1="330" y1="450" x2="380" y2="150" stroke="#111" stroke-width="3" opacity="0.3"/>
-            <line x1="470" y1="450" x2="420" y2="150" stroke="#111" stroke-width="3" opacity="0.3"/>
-            <line x1="400" y1="448" x2="400" y2="156" stroke="#111" stroke-width="3" stroke-dasharray="10 20" opacity="0.22"/>
-            <!-- pines, far to near -->
-            <use href="#pine" transform="translate(322,236) scale(0.34)"/>
-            <use href="#pine" transform="translate(478,236) scale(0.34)"/>
-            <use href="#pine" transform="translate(250,288) scale(0.56)"/>
-            <use href="#pine" transform="translate(552,288) scale(0.56)"/>
-            <use href="#pine" transform="translate(165,356) scale(0.92)"/>
-            <use href="#pine" transform="translate(636,356) scale(0.92)"/>
-            <use href="#pine" transform="translate(64,440) scale(1.42)"/>
-            <use href="#pine" transform="translate(738,440) scale(1.42)"/>
-          </svg>
+          <div id="forest" aria-hidden="true"></div>
 
           <!-- Timer / tension bar -->
           <div id="timer-track"><div id="timer-fill"></div></div>
