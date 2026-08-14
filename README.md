@@ -17,7 +17,18 @@ each one by playing the **next note in the cycle** before your window runs out.
    so you can work out every next note from the letters on the demons.
 3. Each demon carries a random letter, so every duel is a fresh test. Keep
    the streak going.
-4. Miss the timing window, or hit the wrong note, and you fall.
+4. Sometimes (~10% of spawns) a demon hides behind a folding screen (屏風)
+   with a **decoy** letter on it. It's a **skip monster**: to slay it you
+   must strike the note **two steps ahead** in the cycle (e.g. a screen
+   showing `B` is slain by `A` on fourths). Strike the *next* note instead
+   and you'll just cut the cover off — no score, and the timer keeps
+   running — revealing the true demon, which now shows the note one cycle
+   away and must still be slain with the two-ahead note. After the reveal,
+   that demon follows the normal rules. Skip monsters buy you time: a lone
+   skip stretches the reaction window by 30%, and in Advanced waves the
+   window grows by each skip monster's weighted share (e.g. 3 monsters, 1
+   skip → +10%).
+5. Miss the timing window, or hit the wrong note, and you fall.
 
 The demon's letter is randomized on every spawn and never repeats twice in a
 row; the cycle only tells you which note to strike next.
@@ -39,7 +50,9 @@ row; the cycle only tells you which note to strike next.
       window, and the average time between waves (0.3–5.0 s, randomized)
   - In Advanced, strike the monsters bottom-to-top: the nearest demon first,
     then the smaller demons further up the path. Normal and Advanced custom
-    settings are saved separately.
+    settings are saved separately. Waves containing skip monsters get extra
+    time — the wave window is multiplied by `1 + Σ(modifier / count)`, so
+    each skip monster adds its share of the 30% bonus.
 - **Options**
   - Cycle direction: **Fourths** or **Fifths**
   - On-screen guides: **Show** or **Hide** — hiding removes the timer bar, the
@@ -91,13 +104,21 @@ then visit <http://localhost:8731>.
 
 - `index.html` — screens & markup (menu, difficulty, options, game, game‑over)
 - `style.css` — the sumi‑e / cartoon theme (paper texture, ink buttons, demons)
-- `game.js` — state machine, cycle logic, timing, WebAudio blips
+- `js/config.js` — cycles, difficulty tables, spawn pacing, persisted options
+- `js/sound.js` — WebAudio blips (synthesized, no assets)
+- `js/game.js` — core state machine, cycle logic, timing, input, game over
+- `js/monsters.js` — monster spawning, types & rendering (the skip monster
+  and future types live here)
+- `js/ui.js` — screens, menus, options, touch keys, fit-to-viewport, init
+
+The files load in order: `config.js → sound.js → game.js → monsters.js → ui.js`.
+Monster spawn rates are configurable in `js/config.js` (`skipMonsterChance`).
 
 ## Notes
 
 - The game is authored at a 960×620 landscape design size and a 620-wide
   portrait design size (portrait height stretches to fill the screen), then
-  uniformly scaled to fit the viewport (`fitToViewport` in `game.js`), so it
+  uniformly scaled to fit the viewport (`fitToViewport` in `js/ui.js`), so it
   fills everything from phones to 4K displays and re-fits live on resize.
   Because the art is all vector/SVG, it stays crisp at any scale.
 - The reaction deadline is driven by a `setTimeout`, not `requestAnimationFrame`,

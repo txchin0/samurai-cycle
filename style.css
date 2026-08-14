@@ -393,6 +393,59 @@ input[type=range]::-moz-range-thumb{
 .demon.slain .cut{animation:cut .18s ease forwards}
 @keyframes cut{to{transform:translateY(-50%) rotate(-24deg) scaleX(1)}}
 
+/* ---- skip monster: folding-screen cover (屏風) ----
+   The demon hides behind a paper screen with fold lines, a rope strap and
+   a DECOY letter; the real note sits on the body underneath. Striking the
+   next note slashes the cover off and reveals it. */
+.demon.skip .cover{position:absolute;inset:0;z-index:4}
+.demon.skip .cover-half{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--paper-2);
+  border:6px solid var(--ink);
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.14) 0 1.5px,transparent 1.5px 24px);
+  box-shadow:inset 0 12px 0 rgba(0,0,0,.06), inset 0 -12px 0 rgba(0,0,0,.06);
+}
+/* each half shows one side of the split screen (and half the letter) */
+.demon.skip .cover-half.left{border-right:none;clip-path:inset(0 50% 0 0)}
+.demon.skip .cover-half.right{border-left:none;clip-path:inset(0 0 0 50%)}
+.demon.skip .cover-letter{
+  position:relative;z-index:1;
+  font-family:'Shippori Mincho',serif;font-weight:800;font-size:3.8rem;
+}
+.demon.skip .cover-rope{
+  position:absolute;top:2px;left:38%;
+  width:6px;height:14px;border-radius:0 0 3px 3px;background:var(--ink);
+}
+.demon.skip .cover-cut{
+  position:absolute;top:50%;left:-20%;width:140%;height:5px;background:var(--ink);
+  transform:translateY(-50%) rotate(-20deg) scaleX(0);
+  transform-origin:left;z-index:5;
+}
+
+/* entrance: drops in and plants itself like a screen — stiffer than the
+   wobbling demon, so it reads as a different kind of monster at a glance */
+.demon.skip.enter .demon-visual{animation:skip-drop .4s ease, skip-rock .6s ease-in-out .4s infinite}
+@keyframes skip-drop{
+  from{transform:translateY(-90px) scale(1.15);opacity:0}
+  60%{transform:translateY(6px) scale(.97);opacity:1}
+  to{transform:translateY(0) scale(1);opacity:1}
+}
+@keyframes skip-rock{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-4px) rotate(2deg)}}
+/* once exposed it becomes a plain, wobbling demon */
+.demon.skip.revealed .demon-visual{animation:wobble .5s ease-in-out infinite}
+.demon.skip.wobble .demon-visual{animation:wobble .5s ease-in-out infinite}
+.demon.skip.slain .demon-visual{animation:slain .45s forwards}
+
+/* reveal: the slash flashes, then the two screen panels split and fall away */
+.demon.skip.revealing .cover-cut{animation:cut .14s ease forwards}
+.demon.skip.revealing .cover-half.left{animation:panel-l .34s ease .12s forwards}
+.demon.skip.revealing .cover-half.right{animation:panel-r .34s ease .12s forwards}
+@keyframes panel-l{to{transform:translate(-44%,-16%) rotate(-14deg);opacity:0}}
+@keyframes panel-r{to{transform:translate(44%,-16%) rotate(14deg);opacity:0}}
+.demon.skip.revealed .body{animation:reveal-pop .35s ease}
+@keyframes reveal-pop{0%{transform:scale(.85)}55%{transform:scale(1.14)}100%{transform:scale(1)}}
+
 #slash{
   position:absolute;inset:0;pointer-events:none;opacity:0;
   background:linear-gradient(115deg,transparent 44%,var(--ink) 46%,var(--ink) 48%,transparent 50%);
