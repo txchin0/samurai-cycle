@@ -12,9 +12,32 @@ const COVER_REVEAL_MS = 480;  // how long the cover-split reveal lasts
 /* ---- monster types ---- */
 // First of (hopefully) several monster kinds. Each new type gets its own
 // roll here; the skip monster's chance lives in settings.skipMonsterChance
-// (a 0–1 fraction, persisted in the options).
+// and the reverse monster's in settings.reverseMonsterChance (both 0–1
+// fractions, persisted in the options).
+function currentMonsterChances() {
+  if (!state.custom) {
+    return {
+      skip: settings.skipMonsterChance,
+      reverse: settings.reverseMonsterChance,
+    };
+  }
+  if (state.mode === 'advanced') {
+    return {
+      skip: settings.advancedSkipChance,
+      reverse: settings.advancedReverseChance,
+    };
+  }
+  return {
+    skip: settings.customSkipChance,
+    reverse: settings.customReverseChance,
+  };
+}
+
 function pickMonsterType() {
-  if (Math.random() < settings.skipMonsterChance) return 'skip';
+  const { skip, reverse } = currentMonsterChances();
+  const roll = Math.random();
+  if (roll < skip) return 'skip';
+  if (roll < skip + reverse) return 'reverse';
   return 'normal';
 }
 
@@ -34,6 +57,18 @@ function createMonsterData(note) {
       el: null,
     };
   }
+  // A reverse (mirror) demon shows its letter upright, but must be slain
+  // with the PREVIOUS note in the cycle. It is a single-hit monster with
+  // no reveal stage.
+  if (type === 'reverse') {
+    return {
+      type,
+      note,
+      answer: prevLetter(note),
+      timeModifier: REVERSE_TIME_MODIFIER,
+      el: null,
+    };
+  }
   return { type, note, answer: nextLetter(note), timeModifier: 0, el: null };
 }
 
@@ -41,7 +76,7 @@ function spawnDemon() {
   if (!state.playing) return;
 
   // Each demon carries a random letter (never the same one twice in a row);
-  // strike the NEXT note in the cycle.
+  // normally strike the NEXT note in the cycle, but special types override it.
   const cycle = CYCLES[settings.cycle];
   const options = cycle.filter((note) => note !== state.current);
   const note = options[Math.floor(Math.random() * options.length)];
@@ -91,7 +126,11 @@ function pickDistinctNotes(cycle, count, avoid) {
 /* ---- rendering ---- */
 function createDemon(monster, depth) {
   const demon = document.createElement('div');
-  const typeClass = monster.type === 'skip' ? ' skip' : '';
+  const typeClass = monster.type === 'skip'
+    ? ' skip'
+    : monster.type === 'reverse'
+      ? ' reverse'
+      : '';
   demon.className = 'demon enter depth-' + depth + typeClass;
   // appear on the path, roughly centred ahead of the samurai
   const x = 50 + (Math.random() * 16 - 8);      // 42%–58%
@@ -116,6 +155,7 @@ function createDemon(monster, depth) {
       <div class="body">${trueNote}
         <span class="eye l"></span><span class="eye r"></span>
       </div>
+      ${monster.type === 'reverse' ? '<span class="reverse-mark">«</span>' : ''}
       <span class="cut"></span>
       ${cover}
     </div>`;

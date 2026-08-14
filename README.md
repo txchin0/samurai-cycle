@@ -3,7 +3,8 @@
 A black‑and‑white, sumi‑e / cartoon music‑reaction game set in feudal Japan.
 You are a lone samurai on a moonlit forest path, seen from behind. Letter‑demons
 (squares with legs, arms and angry eyes) come down the path toward you — slash
-each one by playing the **next note in the cycle** before your window runs out.
+each one by playing the **next note in the cycle** before your window runs out
+(except when a special demon changes the rule, below).
 
 ![style: black & white cartoon Japan](https://img.shields.io/badge/style-sumi--e%20cartoon-black)
 
@@ -28,10 +29,17 @@ each one by playing the **next note in the cycle** before your window runs out.
    skip stretches the reaction window by 30%, and in Advanced waves the
    window grows by each skip monster's weighted share (e.g. 3 monsters, 1
    skip → +10%).
-5. Miss the timing window, or hit the wrong note, and you fall.
+5. Sometimes (~10% of spawns) an ink‑bodied **mirror demon** (鏡鬼) appears
+   with a small `«` badge. It's a **reverse monster**: strike the note
+   **one step back** in the cycle (e.g. a mirror showing `E` on fourths
+   is slain by `B`). The letter stays upright; only the direction changes.
+   Reverse monsters buy you a little time: a lone reverse stretches the
+   reaction window by 15%, and Advanced waves grow by its weighted share.
+6. Miss the timing window, or hit the wrong note, and you fall.
 
 The demon's letter is randomized on every spawn and never repeats twice in a
-row; the cycle only tells you which note to strike next.
+row; the cycle only tells you the order to work from — special demons apply
+it in the other direction.
 
 ## Menus
 
@@ -41,18 +49,22 @@ row; the cycle only tells you which note to strike next.
     - **Ronin** — 1.2 s
     - **Master** — 0.7 s
     - **Custom** — set your own reaction window (0.3–3.0 s) and the average
-      time between monsters (0.3–5.0 s, randomized around it)
+      time between monsters (0.3–5.0 s, randomized around it), plus the
+      monster mix (skip and reverse chances; normal demons fill the rest)
   - **Advanced** tab (tap the tab or swipe horizontally on the screen)
     - **Novice** — 2 monsters per wave, 3.0 s total wave time
     - **Ronin** — 3 monsters per wave, 3.6 s total wave time
     - **Master** — 3 monsters per wave, 2.4 s total wave time
     - **Custom** — 2–5 monsters per wave, a 0.5–6.0 s whole-wave reaction
-      window, and the average time between waves (0.3–5.0 s, randomized)
+      window, the average time between waves (0.3–5.0 s, randomized), and
+      the monster mix (skip and reverse chances; normal demons fill the rest)
   - In Advanced, strike the monsters bottom-to-top: the nearest demon first,
     then the smaller demons further up the path. Normal and Advanced custom
-    settings are saved separately. Waves containing skip monsters get extra
-    time — the wave window is multiplied by `1 + Σ(modifier / count)`, so
-    each skip monster adds its share of the 30% bonus.
+    settings (including each monster mix) are saved separately. Waves
+    containing special monsters (skip or reverse) get extra time — the wave
+    window is multiplied by
+    `1 + Σ(modifier / count)`, so each skip adds its share of the 30% bonus
+    and each reverse adds its share of the 15% bonus.
 - **Options**
   - Cycle direction: **Fourths** or **Fifths**
   - On-screen guides: **Show** or **Hide** — hiding removes the timer bar, the
@@ -107,12 +119,14 @@ then visit <http://localhost:8731>.
 - `js/config.js` — cycles, difficulty tables, spawn pacing, persisted options
 - `js/sound.js` — WebAudio blips (synthesized, no assets)
 - `js/game.js` — core state machine, cycle logic, timing, input, game over
-- `js/monsters.js` — monster spawning, types & rendering (the skip monster
-  and future types live here)
+- `js/monsters.js` — monster spawning, types & rendering (the skip monster,
+  reverse monster, and future types live here)
 - `js/ui.js` — screens, menus, options, touch keys, fit-to-viewport, init
 
 The files load in order: `config.js → sound.js → game.js → monsters.js → ui.js`.
-Monster spawn rates are configurable in `js/config.js` (`skipMonsterChance`).
+Monster spawn rates are configurable in `js/config.js` (`skipMonsterChance`,
+`reverseMonsterChance`, plus the `custom*Chance` and `advanced*Chance`
+settings used by Custom mode).
 
 ## Notes
 

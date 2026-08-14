@@ -43,6 +43,12 @@ function nextLetter(letter) {
   return cyc[(i + 1) % cyc.length];
 }
 
+function prevLetter(letter) {
+  const cyc = CYCLES[settings.cycle];
+  const i = cyc.indexOf(letter);
+  return cyc[(i + cyc.length - 1) % cyc.length];
+}
+
 function cycleHint() {
   return CYCLES[settings.cycle].join(' → ');
 }
@@ -120,8 +126,8 @@ function randomSpawnDelay(mean) {
 // Monster types can stretch the reaction window: each spawned monster
 // contributes its timeModifier, weighted by its share of the wave
 // (1/1 in normal mode, 1/count in advanced waves). A lone skip monster
-// therefore stretches the window by 30%; a 3-monster wave with one skip
-// by 10%.
+// therefore stretches the window by 30% and a lone reverse monster by 15%;
+// a 3-monster wave with one special monster is stretched by a third of that.
 function waveTimeMultiplier() {
   const count = state.monsters.length;
   if (!count) return 1;

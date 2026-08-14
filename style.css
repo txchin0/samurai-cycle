@@ -253,6 +253,20 @@ input[type=range]::-moz-range-thumb{
   background:var(--paper);border:3px solid var(--ink);cursor:pointer;
 }
 
+/* monster-mix controls inside the custom difficulty panels */
+.mix-block{
+  width:100%;display:flex;flex-direction:column;gap:8px;align-items:center;
+  padding-top:4px;border-top:2px dashed var(--ink);
+}
+.mix-title{
+  font-family:'Shippori Mincho',serif;font-weight:800;
+  font-size:.9rem;letter-spacing:.14em;opacity:.75;
+}
+.mix-note{
+  font-size:.8rem;opacity:.75;letter-spacing:.03em;
+  margin-top:2px;
+}
+
 /* ---- options ---- */
 .opt-row{
   display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -392,6 +406,49 @@ input[type=range]::-moz-range-thumb{
 }
 .demon.slain .cut{animation:cut .18s ease forwards}
 @keyframes cut{to{transform:translateY(-50%) rotate(-24deg) scaleX(1)}}
+
+/* ---- reverse monster: ink-bodied mirror demon (鏡鬼) ----
+   The palette is inverted (ink body, paper marks), the note stays upright
+   for fast reading, and a small « badge signals "strike the note before". */
+.demon.reverse .body{
+  background:var(--ink);
+  border-color:var(--paper);
+  color:var(--paper);
+}
+.demon.reverse .arm,
+.demon.reverse .leg{
+  background:var(--paper);
+  box-shadow:0 0 0 2px var(--ink);   /* stay visible on both ink body and paper path */
+}
+.demon.reverse .eye{background:var(--paper)}
+.demon.reverse .body::after{
+  content:"";
+  position:absolute;top:10px;left:8px;width:16px;height:64%;
+  background:linear-gradient(105deg,transparent 28%,var(--paper) 46%,transparent 62%);
+  opacity:.38;
+  transform:rotate(-14deg);
+  pointer-events:none;
+}
+.demon.reverse .reverse-mark{
+  position:absolute;top:3px;left:50%;transform:translateX(-50%);
+  font-family:'Shippori Mincho',serif;font-weight:800;font-size:.9rem;
+  line-height:1;color:var(--paper);z-index:5;
+}
+
+/* entrance: slides in from the left like a reflection snapping into place,
+   then sways in the opposite phase to the normal demon's wobble */
+.demon.reverse.enter .demon-visual{
+  animation:reverse-in .38s ease, reverse-sway .7s ease-in-out .38s infinite;
+}
+@keyframes reverse-in{
+  from{transform:translateX(-70px) scale(.2);opacity:0}
+  55%{transform:translateX(8px) scale(1.05);opacity:1}
+  to{transform:translateX(0) scale(1);opacity:1}
+}
+@keyframes reverse-sway{
+  0%,100%{transform:translateY(0) rotate(2deg)}
+  50%{transform:translateY(-6px) rotate(-2deg)}
+}
 
 /* ---- skip monster: folding-screen cover (屏風) ----
    The demon hides behind a paper screen with fold lines, a rope strap and

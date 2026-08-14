@@ -61,6 +61,14 @@
                 <input type="range" id="custom-range" min="0.3" max="3" step="0.1" value="1.0" />
                 <label for="custom-spawn">Average time between monsters: <b id="custom-spawn-val">2.7</b>s</label>
                 <input type="range" id="custom-spawn" min="0.3" max="5" step="0.1" value="2.7" />
+                <div class="mix-block">
+                  <span class="mix-title">MONSTER MIX</span>
+                  <label for="custom-skip-chance">Skip monsters: <b id="custom-skip-val">10</b>%</label>
+                  <input type="range" id="custom-skip-chance" min="0" max="100" step="1" value="10" />
+                  <label for="custom-reverse-chance">Reverse monsters: <b id="custom-reverse-val">10</b>%</label>
+                  <input type="range" id="custom-reverse-chance" min="0" max="100" step="1" value="10" />
+                  <p class="mix-note">Normal monsters fill the rest: <b id="custom-normal-val">80</b>%</p>
+                </div>
                 <button class="ink-btn tiny" id="custom-begin">BEGIN</button>
               </div>
             </div>
@@ -88,6 +96,14 @@
                 <input type="range" id="advanced-spawn" min="0.3" max="5" step="0.1" value="3.0" />
                 <label for="advanced-monsters">Monsters per wave: <b id="advanced-monsters-val">3</b></label>
                 <input type="range" id="advanced-monsters" min="2" max="5" step="1" value="3" />
+                <div class="mix-block">
+                  <span class="mix-title">MONSTER MIX</span>
+                  <label for="advanced-skip-chance">Skip monsters: <b id="advanced-skip-val">10</b>%</label>
+                  <input type="range" id="advanced-skip-chance" min="0" max="100" step="1" value="10" />
+                  <label for="advanced-reverse-chance">Reverse monsters: <b id="advanced-reverse-val">10</b>%</label>
+                  <input type="range" id="advanced-reverse-chance" min="0" max="100" step="1" value="10" />
+                  <p class="mix-note">Normal monsters fill the rest: <b id="advanced-normal-val">80</b>%</p>
+                </div>
                 <button class="ink-btn tiny" id="advanced-begin">BEGIN</button>
               </div>
             </div>

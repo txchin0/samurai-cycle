@@ -135,7 +135,38 @@ spawnRange.addEventListener('input', () => {
   refreshCustomSummary();
   saveOptions();
 });
+
+// custom monster-mix sliders: skip + reverse are adjustable, normal demons
+// automatically fill whatever chance is left over.
+const customSkipRange = $('#custom-skip-chance');
+const customReverseRange = $('#custom-reverse-chance');
+function mixFromSliders(skipRange, reverseRange) {
+  reverseRange.max = String(Math.max(0, 100 - Number(skipRange.value)));
+  if (Number(reverseRange.value) > Number(reverseRange.max)) {
+    reverseRange.value = reverseRange.max;
+  }
+  skipRange.max = String(Math.max(0, 100 - Number(reverseRange.value)));
+  if (Number(skipRange.value) > Number(skipRange.max)) {
+    skipRange.value = skipRange.max;
+  }
+  const skip = Number(skipRange.value);
+  const reverse = Number(reverseRange.value);
+  return { skip, reverse, normal: Math.max(0, 100 - skip - reverse) };
+}
+function applyCustomMix(persist = true) {
+  const mix = mixFromSliders(customSkipRange, customReverseRange);
+  $('#custom-skip-val').textContent = mix.skip;
+  $('#custom-reverse-val').textContent = mix.reverse;
+  $('#custom-normal-val').textContent = mix.normal;
+  settings.customSkipChance = mix.skip / 100;
+  settings.customReverseChance = mix.reverse / 100;
+  if (persist) saveOptions();
+}
+customSkipRange.addEventListener('input', () => applyCustomMix());
+customReverseRange.addEventListener('input', () => applyCustomMix());
+
 $('#custom-begin').addEventListener('click', () => {
+  applyCustomMix(false);
   settings.reaction = Math.round(Number(range.value) * 1000);
   state.mode = 'normal';
   state.custom = true;
@@ -173,7 +204,25 @@ advancedMonstersRange.addEventListener('input', () => {
   refreshAdvancedSummary();
   saveOptions();
 });
+
+// advanced custom monster mix (separate from normal custom, like the rest of
+// the advanced custom settings)
+const advancedSkipRange = $('#advanced-skip-chance');
+const advancedReverseRange = $('#advanced-reverse-chance');
+function applyAdvancedMix(persist = true) {
+  const mix = mixFromSliders(advancedSkipRange, advancedReverseRange);
+  $('#advanced-skip-val').textContent = mix.skip;
+  $('#advanced-reverse-val').textContent = mix.reverse;
+  $('#advanced-normal-val').textContent = mix.normal;
+  settings.advancedSkipChance = mix.skip / 100;
+  settings.advancedReverseChance = mix.reverse / 100;
+  if (persist) saveOptions();
+}
+advancedSkipRange.addEventListener('input', () => applyAdvancedMix());
+advancedReverseRange.addEventListener('input', () => applyAdvancedMix());
+
 $('#advanced-begin').addEventListener('click', () => {
+  applyAdvancedMix(false);
   settings.advancedReaction = Math.round(Number(advancedRange.value) * 1000);
   settings.advancedSpawnAvg = Math.round(Number(advancedSpawnRange.value) * 1000);
   settings.advancedMonsters = Number(advancedMonstersRange.value);
@@ -251,6 +300,9 @@ function syncOptionsUI() {
   $('#custom-val').textContent = (settings.customReaction / 1000).toFixed(1);
   spawnRange.value = (settings.customSpawnAvg / 1000).toFixed(1);
   $('#custom-spawn-val').textContent = (settings.customSpawnAvg / 1000).toFixed(1);
+  customSkipRange.value = settings.customSkipChance * 100;
+  customReverseRange.value = settings.customReverseChance * 100;
+  applyCustomMix(false);
   refreshCustomSummary();
 
   advancedRange.value = (settings.advancedReaction / 1000).toFixed(1);
@@ -259,6 +311,9 @@ function syncOptionsUI() {
   $('#advanced-spawn-val').textContent = (settings.advancedSpawnAvg / 1000).toFixed(1);
   advancedMonstersRange.value = settings.advancedMonsters;
   $('#advanced-monsters-val').textContent = settings.advancedMonsters;
+  advancedSkipRange.value = settings.advancedSkipChance * 100;
+  advancedReverseRange.value = settings.advancedReverseChance * 100;
+  applyAdvancedMix(false);
   refreshAdvancedSummary();
   refreshCycleDesc();
 }

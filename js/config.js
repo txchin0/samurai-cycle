@@ -37,6 +37,8 @@ const ADVANCED_MONSTERS_MAX = 5;
 
 const SKIP_TIME_MODIFIER = 0.3; // extra reaction time (as a fraction of the
                                 // base window) added when a skip monster spawns
+const REVERSE_TIME_MODIFIER = 0.15; // extra reaction time (as a fraction of the
+                                    // base window) added when a reverse monster spawns
 
 /* ------------------------------------------------------------------ */
 const OPTIONS_KEY = 'samurai-options';
@@ -48,10 +50,15 @@ const OPTIONS_DEFAULTS = {
   reaction: DIFFICULTY.medium,
   customReaction: 1000,    // last custom slider value, ms
   customSpawnAvg: 2700,    // last custom spawn-average value, ms
+  customSkipChance: 0.1,   // custom normal-mode skip-monster chance
+  customReverseChance: 0.1, // custom normal-mode reverse-monster chance
   advancedReaction: 3000,  // last advanced custom wave-time value, ms
   advancedSpawnAvg: 3000,  // last advanced custom between-wave value, ms
   advancedMonsters: 3,     // last advanced custom monsters-per-wave value
+  advancedSkipChance: 0.1,   // custom advanced-mode skip-monster chance
+  advancedReverseChance: 0.1, // custom advanced-mode reverse-monster chance
   skipMonsterChance: 0.1,  // fraction of spawns that are skip monsters
+  reverseMonsterChance: 0.1, // fraction of spawns that are reverse monsters
 };
 
 const settings = {
@@ -108,6 +115,12 @@ function loadOptions() {
   const customSpawnAvg = clampSpawnMs(raw.customSpawnAvg);
   if (customSpawnAvg !== null) settings.customSpawnAvg = customSpawnAvg;
 
+  const customSkipChance = clampFraction(raw.customSkipChance);
+  if (customSkipChance !== null) settings.customSkipChance = customSkipChance;
+
+  const customReverseChance = clampFraction(raw.customReverseChance);
+  if (customReverseChance !== null) settings.customReverseChance = customReverseChance;
+
   const advancedReaction = clampMs(raw.advancedReaction, 500, 6000);
   if (advancedReaction !== null) settings.advancedReaction = advancedReaction;
 
@@ -117,8 +130,17 @@ function loadOptions() {
   const advancedMonsters = clampMonsterCount(raw.advancedMonsters);
   if (advancedMonsters !== null) settings.advancedMonsters = advancedMonsters;
 
+  const advancedSkipChance = clampFraction(raw.advancedSkipChance);
+  if (advancedSkipChance !== null) settings.advancedSkipChance = advancedSkipChance;
+
+  const advancedReverseChance = clampFraction(raw.advancedReverseChance);
+  if (advancedReverseChance !== null) settings.advancedReverseChance = advancedReverseChance;
+
   const skipMonsterChance = clampFraction(raw.skipMonsterChance);
   if (skipMonsterChance !== null) settings.skipMonsterChance = skipMonsterChance;
+
+  const reverseMonsterChance = clampFraction(raw.reverseMonsterChance);
+  if (reverseMonsterChance !== null) settings.reverseMonsterChance = reverseMonsterChance;
 }
 
 function saveOptions() {
@@ -131,10 +153,15 @@ function saveOptions() {
       reaction: settings.reaction,
       customReaction: settings.customReaction,
       customSpawnAvg: settings.customSpawnAvg,
+      customSkipChance: settings.customSkipChance,
+      customReverseChance: settings.customReverseChance,
       advancedReaction: settings.advancedReaction,
       advancedSpawnAvg: settings.advancedSpawnAvg,
       advancedMonsters: settings.advancedMonsters,
+      advancedSkipChance: settings.advancedSkipChance,
+      advancedReverseChance: settings.advancedReverseChance,
       skipMonsterChance: settings.skipMonsterChance,
+      reverseMonsterChance: settings.reverseMonsterChance,
     }));
   } catch (e) { /* private mode / quota errors should never break play */ }
 }
