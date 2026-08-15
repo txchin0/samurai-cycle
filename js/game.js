@@ -35,6 +35,44 @@ const state = {
 const $ = (sel) => document.querySelector(sel);
 
 /* ================================================================== */
+/*  FOREST BACKDROP PRELOAD                                           */
+/*  The gameplay backdrop is a large webp that CSS paints when it has
+    downloaded; until then the arena is plain black. Preload both
+    variants on page load, then hold the first countdown until the
+    active image is ready so the duel never starts on an empty path.   */
+/* ================================================================== */
+const FOREST_BACKGROUNDS = {
+  portrait: 'sumie_forest.webp',
+  landscape: 'sumie_forest_landscape.webp',
+};
+const forestImages = {};
+
+Object.entries(FOREST_BACKGROUNDS).forEach(([variant, src]) => {
+  const img = new Image();
+  img.src = src;
+  forestImages[variant] = img;
+});
+
+// The CSS chooses one of the two images based on the `portrait` body class.
+function activeForestImage() {
+  return forestImages[
+    document.body.classList.contains('portrait') ? 'portrait' : 'landscape'
+  ];
+}
+
+// Resolves once the active backdrop has finished downloading. A failed
+// image also resolves (complete with no pixels) so a broken asset never
+// hangs the game — it just falls back to the old black backdrop.
+function forestReady() {
+  return new Promise((resolve) => {
+    const img = activeForestImage();
+    if (img.complete) { resolve(); return; }
+    img.addEventListener('load', () => resolve(), { once: true });
+    img.addEventListener('error', () => resolve(), { once: true });
+  });
+}
+
+/* ================================================================== */
 /*  CYCLE MATH                                                        */
 /* ================================================================== */
 function nextLetter(letter) {
@@ -64,7 +102,7 @@ function getBest() {
 /* ================================================================== */
 /*  GAME FLOW                                                         */
 /* ================================================================== */
-function startGame() {
+async function startGame() {
   state.playing = true;
   state.score = 0;
   state.streak = 0;
@@ -77,7 +115,12 @@ function startGame() {
   $('#screen-game').classList.toggle('no-ui', !settings.showUI);
   clearDemon();
   show('game');
-  beginPrepare();
+
+  // Hold the countdown until the forest backdrop is actually painted.
+  // The popup explains the pause when the image is still downloading.
+  if (!activeForestImage().complete) popup('読み込み中 — loading…', true);
+  await forestReady();
+  if (state.playing) beginPrepare();   // in case the player quit while waiting
 }
 
 // Calm "zen" moment before the duel begins: the samurai centres himself,
@@ -255,11 +298,12 @@ function strikeMonster(el) {
 const CRIES = ['斬！', 'SLASH!', '一閃!', 'HA!', '切！'];
 function pickCry() { return CRIES[Math.floor(Math.random() * CRIES.length)]; }
 
-function popup(text) {
+function popup(text, persistent = false) {
   const p = $('#popup');
   p.textContent = text;
   p.classList.remove('go');
   void p.offsetWidth;
+  p.classList.toggle('loading', persistent);
   p.classList.add('go');
 }
 
