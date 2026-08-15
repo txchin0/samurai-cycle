@@ -88,6 +88,24 @@ body{
    pointercancel before the swipe threshold is reached. */
 #screen-difficulty{
   touch-action:pan-y;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  justify-content:flex-start;
+  scrollbar-width:thin;
+  scrollbar-color:var(--ink) transparent;
+}
+/* auto margins keep the frame centred when it fits, but pin it to the top
+   when the custom panel makes it taller than the screen, so nothing gets
+   clipped below the fold and the top stays reachable. */
+#screen-difficulty .brush-frame{
+  margin:auto;
+}
+#screen-difficulty::-webkit-scrollbar{width:8px}
+#screen-difficulty::-webkit-scrollbar-track{background:transparent}
+#screen-difficulty::-webkit-scrollbar-thumb{
+  background:var(--ink);
+  border:2px solid var(--paper);
+  border-radius:4px;
 }
 
 .brush-frame{
