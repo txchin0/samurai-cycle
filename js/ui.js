@@ -366,15 +366,20 @@ function fitToViewport() {
 /* ====================================================================
    TOUCH KEYS
    No browser can reliably detect a physical keyboard, so AUTO uses
-   pointer heuristics: any coarse pointer and no fine pointer means
-   a phone/tablet without a keyboard or mouse. SHOW/HIDE override.
+   pointer heuristics: a coarse primary pointer means touch-first
+   (a phone/tablet), even if a mouse, trackpad or stylus is also
+   connected. `any-pointer` is deliberately not used for the decision
+   because it reports the union of ALL pointers, so one fine pointer
+   would falsely hide the keys. SHOW/HIDE override.
    ==================================================================== */
 function prefersTouchKeys() {
   if (settings.touchKeys !== 'auto') return settings.touchKeys === 'show';
-  return (
-    matchMedia('(any-pointer: coarse)').matches &&
-    !matchMedia('(any-pointer: fine)').matches
-  );
+  const hasMedia = typeof matchMedia === 'function';
+  const primaryCoarse = hasMedia && matchMedia('(pointer: coarse)').matches;
+  const primaryFine = hasMedia && matchMedia('(pointer: fine)').matches;
+  // Fall back to touch-event capability for browsers that don't support
+  // (or misreport) the pointer media queries.
+  return primaryCoarse || ((navigator.maxTouchPoints || 0) > 0 && !primaryFine);
 }
 
 function refreshNotePad() {
@@ -394,11 +399,13 @@ function updatePadSpacer() {
 
 window.addEventListener('resize', fitToViewport);
 window.addEventListener('orientationchange', fitToViewport);
-['(any-pointer: coarse)', '(any-pointer: fine)'].forEach((query) => {
-  const mq = matchMedia(query);
-  if (mq.addEventListener) mq.addEventListener('change', refreshNotePad);
-  else if (mq.addListener) mq.addListener(refreshNotePad);
-});
+if (typeof matchMedia === 'function') {
+  ['(pointer: coarse)', '(pointer: fine)'].forEach((query) => {
+    const mq = matchMedia(query);
+    if (mq.addEventListener) mq.addEventListener('change', refreshNotePad);
+    else if (mq.addListener) mq.addListener(refreshNotePad);
+  });
+}
 
 /* ---- init ---- */
 loadOptions();

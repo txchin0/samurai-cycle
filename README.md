@@ -72,7 +72,8 @@ it in the other direction.
     since that's the note you must react to)
   - Sound: on / off
   - Touch keys: **Auto**, **Show**, or **Hide** — Auto shows the on-screen note
-    buttons on touch screens without a keyboard or mouse
+    buttons on touch-first devices (primary input is touch), even if a mouse or
+    stylus is also connected
 
 Your best score is saved in the browser (`localStorage`).
 
@@ -98,7 +99,7 @@ then visit <http://localhost:8731>.
 | Key | Action |
 | --- | --- |
 | `A`–`G` | Strike that note |
-| On-screen note buttons | Strike with touch — auto-shown on phones/tablets, or set via Options → Touch keys |
+| On-screen note buttons | Strike with touch — auto-shown on touch-first phones/tablets, or set via Options → Touch keys |
 | `Esc` | Quit to menu (during a run) |
 
 ## Mobile / touch
@@ -106,11 +107,11 @@ then visit <http://localhost:8731>.
 - The game switches to a dedicated portrait layout on phones and fills the
   browser viewport edge-to-edge (a 620-wide design whose height stretches to
   match the screen), and keeps the existing landscape layout on wider screens.
-- On touch devices without a keyboard, a 7-button note pad appears as a bar
-  along the bottom of the screen spanning its full width: two rows in
-  portrait, one row in landscape.
-- If you use a phone with a Bluetooth keyboard (or a touch laptop where you'd
-  rather tap), override the detection with **Options → Touch keys**.
+- On touch-first devices, a 7-button note pad appears as a bar along the
+  bottom of the screen spanning its full width: two rows in portrait, one
+  row in landscape.
+- If you use a hybrid device (touch laptop, phone with a mouse) and the default
+  doesn't match how you play, override the detection with **Options → Touch keys**.
 
 ## Files
 
