@@ -22,6 +22,7 @@ body{
   font-family:'Zen Maru Gothic',system-ui,sans-serif;
   display:flex;align-items:center;justify-content:center;
   overflow:hidden;
+  overscroll-behavior:none;
   -webkit-user-select:none;user-select:none;
 }
 
@@ -149,6 +150,7 @@ body{
   border:3px solid var(--ink);
   padding:14px 30px;
   cursor:pointer;
+  touch-action:manipulation;
   border-radius:4px 14px 6px 16px;   /* wobbly hand-drawn corners */
   box-shadow:4px 4px 0 rgba(0,0,0,.85);
   transition:transform .08s ease,box-shadow .08s ease,background .15s;
@@ -362,6 +364,17 @@ input[type=range]::-moz-range-thumb{
    GAME ARENA
    ==================================================================== */
 #screen-game{padding:0;justify-content:flex-start}
+
+/* Lock all panning/zooming gestures on the gameplay surface and the
+   fixed touch controls, so a stray swipe never scrolls the page and a
+   pinch never zooms the viewport mid-duel. The difficulty screen is
+   deliberately exempt (see its touch-action rule above) because its
+   custom panel must stay vertically scrollable. */
+#screen-game,
+#notepad,
+#ability-fab{
+  touch-action:none;
+}
 
 #hud{
   width:100%;display:flex;gap:26px;justify-content:center;

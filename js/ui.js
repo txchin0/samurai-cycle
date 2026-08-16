@@ -14,6 +14,35 @@ const screens = {
   over: $('#screen-over'),
 };
 
+/* ================================================================== */
+/*  GESTURE LOCK                                                      */
+/*  iOS Safari ignores user-scalable=no, so the viewport meta tag is
+     not enough on its own. These non-passive touch guards cancel page
+     scroll / pull-to-refresh and two-finger pinch-zoom everywhere,
+     while touches that start on the difficulty screen or a range slider
+     keep their native vertical scroll and drag behavior.             */
+/* ================================================================== */
+const GESTURE_EXEMPT = '#screen-difficulty, input[type="range"]';
+let lockedTouch = false;
+
+document.addEventListener('touchstart', (e) => {
+  const onExempt = e.target instanceof Element && e.target.closest(GESTURE_EXEMPT);
+  lockedTouch = e.touches.length > 1 || !onExempt;
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (lockedTouch || e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+
+document.addEventListener('touchend', () => { lockedTouch = false; });
+document.addEventListener('touchcancel', () => { lockedTouch = false; });
+
+// Legacy iOS Safari fires gesture events for pinch instead of
+// multi-touch touchmove; cancel those too.
+['gesturestart', 'gesturechange', 'gestureend'].forEach((type) => {
+  document.addEventListener(type, (e) => e.preventDefault());
+});
+
 function show(name) {
   Object.values(screens).forEach((s) => s.classList.remove('active'));
   screens[name].classList.add('active');
