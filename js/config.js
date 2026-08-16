@@ -35,10 +35,12 @@ const PREPARE_MS = 1000;      // brief "ready" moment before the first demon
 const ADVANCED_MONSTERS_MIN = 2;
 const ADVANCED_MONSTERS_MAX = 5;
 
-const SKIP_TIME_MODIFIER = 0.3; // extra reaction time (as a fraction of the
-                                // base window) added when a skip monster spawns
-const REVERSE_TIME_MODIFIER = 0.15; // extra reaction time (as a fraction of the
-                                    // base window) added when a reverse monster spawns
+const SKIP_TIME_MODIFIER = 1;   // extra reaction time (as a fraction of the
+                                // base window) added when a skip monster spawns;
+                                // 1 = a lone skip monster doubles the window (2×)
+const REVERSE_TIME_MODIFIER = 1; // extra reaction time (as a fraction of the
+                                 // base window) added when a reverse monster spawns;
+                                 // 1 = a lone reverse monster doubles the window (2×)
 
 /* ------------------------------------------------------------------ */
 const OPTIONS_KEY = 'samurai-options';

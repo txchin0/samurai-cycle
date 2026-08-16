@@ -26,15 +26,15 @@ each one by playing the **next note in the cycle** before your window runs out
    running — revealing the true demon, which now shows the note one cycle
    away and must still be slain with the two-ahead note. After the reveal,
    that demon follows the normal rules. Skip monsters buy you time: a lone
-   skip stretches the reaction window by 30%, and in Advanced waves the
+   skip doubles the reaction window (2×), and in Advanced waves the
    window grows by each skip monster's weighted share (e.g. 3 monsters, 1
-   skip → +10%).
+   skip → ×1⅓).
 5. Sometimes (~10% of spawns) an ink‑bodied **mirror demon** (鏡鬼) appears
    with a small `«` badge. It's a **reverse monster**: strike the note
    **one step back** in the cycle (e.g. a mirror showing `E` on fourths
    is slain by `B`). The letter stays upright; only the direction changes.
    Reverse monsters buy you a little time: a lone reverse stretches the
-   reaction window by 15%, and Advanced waves grow by its weighted share.
+   reaction window to 2×, and Advanced waves grow by its weighted share.
 6. Miss the timing window, or hit the wrong note, and you fall.
 
 The demon's letter is randomized on every spawn and never repeats twice in a
@@ -63,8 +63,9 @@ it in the other direction.
     settings (including each monster mix) are saved separately. Waves
     containing special monsters (skip or reverse) get extra time — the wave
     window is multiplied by
-    `1 + Σ(modifier / count)`, so each skip adds its share of the 30% bonus
-    and each reverse adds its share of the 15% bonus.
+    `1 + Σ(modifier / count)`, so each skip adds its share of the 100% bonus
+    and each reverse adds its share of the 100% bonus (a lone special monster
+    doubles the window).
 - **Options**
   - Cycle direction: **Fourths** or **Fifths**
   - On-screen guides: **Show** or **Hide** — hiding removes the timer bar, the

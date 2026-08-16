@@ -169,8 +169,8 @@ function randomSpawnDelay(mean) {
 // Monster types can stretch the reaction window: each spawned monster
 // contributes its timeModifier, weighted by its share of the wave
 // (1/1 in normal mode, 1/count in advanced waves). A lone skip monster
-// therefore stretches the window by 30% and a lone reverse monster by 15%;
-// a 3-monster wave with one special monster is stretched by a third of that.
+// or reverse monster therefore doubles the window (2×); a 3-monster wave
+// with one special monster is stretched by a third of that.
 function waveTimeMultiplier() {
   const count = state.monsters.length;
   if (!count) return 1;
