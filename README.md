@@ -36,6 +36,10 @@ each one by playing the **next note in the cycle** before your window runs out
    Reverse monsters buy you a little time: a lone reverse stretches the
    reaction window to 2×, and Advanced waves grow by its weighted share.
 6. Miss the timing window, or hit the wrong note, and you fall.
+7. Your **ability** starts each run charged (blade button, bottom‑left).
+   Press `Space` (or tap the button) during a wave to unleash **Issen** (一閃):
+   one flash slays every remaining demon and scores each kill. The ring
+   around the button shows the charge — it refills after 10 manual strikes.
 
 The demon's letter is randomized on every spawn and never repeats twice in a
 row; the cycle only tells you the order to work from — special demons apply
@@ -101,6 +105,7 @@ then visit <http://localhost:8731>.
 | --- | --- |
 | `A`–`G` | Strike that note |
 | On-screen note buttons | Strike with touch — auto-shown on touch-first phones/tablets, or set via Options → Touch keys |
+| `Space` / ability button | Unleash the ability when its ring is full (Issen: slay all remaining demons) |
 | `Esc` | Quit to menu (during a run) |
 
 ## Mobile / touch
@@ -121,6 +126,8 @@ then visit <http://localhost:8731>.
 - `sumie_forest.webp`, `sumie_forest_landscape.webp` — the portrait and
   landscape gameplay backdrop images (the right one is picked for the window)
 - `js/config.js` — cycles, difficulty tables, spawn pacing, persisted options
+- `js/abilities.js` — the active-ability registry (Issen's effect, icon and
+  recharge cost; new abilities plug in here)
 - `js/sound.js` — WebAudio blips (synthesized, no assets)
 - `js/game.js` — core state machine, cycle logic, timing, input, game over
 - `js/monsters.js` — monster spawning, types & rendering (the skip monster,

@@ -386,7 +386,24 @@ function refreshNotePad() {
   const showPad = state.screen === 'game' && prefersTouchKeys();
   $('#notepad').classList.toggle('show', showPad);
   document.body.classList.toggle('touch-keys', showPad);
+  // The keyboard/mouse ability button sits bottom-left whenever the touch
+  // pad is hidden; the pad's own ability slot takes over when it's shown.
+  $('#ability-fab').classList.toggle('show', !showPad && state.screen === 'game');
   updatePadSpacer();
+}
+
+// Fill the ability button shells (pad slot + FAB) from the registry so a
+// future ability's icon and label come from ABILITIES alone.
+function renderAbilityButtons() {
+  const ability = ABILITIES[state.abilityId];
+  document.querySelectorAll('.ability-btn').forEach((btn) => {
+    btn.innerHTML = `
+      <svg class="ability-ring" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="ring-bg" cx="50" cy="50" r="44"></circle>
+        <circle class="ring-fill" cx="50" cy="50" r="44" pathLength="100"></circle>
+      </svg>${ability.icon}`;
+    btn.setAttribute('aria-label', `${ability.name} (Space): ${ability.desc}`);
+  });
 }
 
 // The note pad is fixed to the viewport (unscaled), so reserve its physical
@@ -411,5 +428,6 @@ if (typeof matchMedia === 'function') {
 loadOptions();
 syncOptionsUI();
 $('#best').textContent = getBest();
+renderAbilityButtons();
 fitToViewport();
 show('menu');

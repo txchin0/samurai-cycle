@@ -253,6 +253,7 @@
       <button class="note-btn" type="button" data-note="C" aria-label="Strike C">C</button>
       <button class="note-btn" type="button" data-note="D" aria-label="Strike D">D</button>
     </div>
+    <button class="note-btn ability-btn" type="button" aria-label="Issen ability"></button>
     <div class="note-row">
       <button class="note-btn" type="button" data-note="E" aria-label="Strike E">E</button>
       <button class="note-btn" type="button" data-note="F" aria-label="Strike F">F</button>
@@ -260,7 +261,12 @@
     </div>
   </div>
 
+  <!-- Ability button for keyboard/mouse players (fixed bottom-left; the
+       touch pad version above takes over when the pad is shown) -->
+  <button class="note-btn ability-btn" id="ability-fab" type="button" aria-label="Issen ability"></button>
+
   <script src="js/config.js"></script>
+  <script src="js/abilities.js"></script>
   <script src="js/sound.js"></script>
   <script src="js/game.js"></script>
   <script src="js/monsters.js"></script>

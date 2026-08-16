@@ -28,6 +28,11 @@ function slashSound(letter) {
   beep(NOTE_FREQ[letter] || 440, 0.14, 'triangle', 0.2);
   beep(120, 0.08, 'sawtooth', 0.08);           // whoosh
 }
+function issenSound() {
+  beep(523.25, 0.08, 'square', 0.12);           // C5
+  beep(784.0, 0.1, 'square', 0.12);             // G5
+  beep(156.0, 0.18, 'sawtooth', 0.1);           // low whoosh
+}
 function failSound() {
   beep(90, 0.35, 'sawtooth', 0.22);
 }

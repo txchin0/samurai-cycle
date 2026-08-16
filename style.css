@@ -186,12 +186,16 @@ body.touch-keys #notepad-spacer{
   height:var(--touch-pad-h-design, 0px);
 }
 
-/* landscape: one row of seven; portrait: two rows (4 + 3, centred) */
-body:not(.portrait) #notepad.show{grid-template-columns:repeat(7,1fr)}
+/* landscape: ability button + one row of seven; portrait: two rows
+   (4 + ability, E, F, G) with the ability bottom-left */
+body:not(.portrait) #notepad.show{grid-template-columns:repeat(8,1fr)}
 body.portrait #notepad.show{grid-template-columns:repeat(4,1fr)}
-body.portrait .note-row:nth-child(2) .note-btn:nth-child(1){grid-column:2}
-body.portrait .note-row:nth-child(2) .note-btn:nth-child(2){grid-column:3}
-body.portrait .note-row:nth-child(2) .note-btn:nth-child(3){grid-column:4}
+body.portrait .note-row:nth-child(3) .note-btn:nth-child(1){grid-column:2}
+body.portrait .note-row:nth-child(3) .note-btn:nth-child(2){grid-column:3}
+body.portrait .note-row:nth-child(3) .note-btn:nth-child(3){grid-column:4}
+/* landscape: ability on the far left of the single row; portrait: bottom-left */
+body:not(.portrait) #notepad .ability-btn{order:-1}
+body.portrait #notepad .ability-btn{grid-column:1;grid-row:2}
 
 .note-btn{
   font-family:'Shippori Mincho',serif;
@@ -217,6 +221,60 @@ body.portrait .note-row:nth-child(2) .note-btn:nth-child(3){grid-column:4}
   color:var(--paper);
 }
 .note-btn:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+
+/* ---- active ability button (Issen / future abilities) ---- */
+.ability-btn{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+.ability-btn svg{display:block}
+.ability-ring{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  padding:3px;
+}
+.ability-ring circle{fill:none;stroke:var(--ink);stroke-width:7}
+.ring-bg{opacity:.18}
+.ring-fill{
+  stroke-dasharray:100;
+  stroke-dashoffset:100;
+  transform:rotate(-90deg);
+  transform-origin:50% 50%;
+  transition:stroke-dashoffset .15s linear;
+}
+.ability-icon{width:58%;height:58%}
+
+/* recharging: grayed out, ring shows progress, tapping does nothing */
+.ability-btn:not(.ready){
+  opacity:.38;
+  filter:grayscale(1);
+  cursor:default;
+}
+.ability-btn:not(.ready):active{
+  transform:none;
+  box-shadow:4px 4px 0 rgba(0,0,0,.85);
+  background:var(--paper);
+  color:var(--ink);
+}
+.ability-btn.ready .ring-fill{opacity:1}
+
+/* fixed bottom-left home for keyboard/mouse players (hidden while the
+   touch pad is shown, since the pad version takes its place) */
+#ability-fab{
+  position:fixed;
+  left:12px;
+  bottom:max(12px, env(safe-area-inset-bottom));
+  z-index:61;
+  width:96px;
+  height:72px;
+  display:none;
+}
+#ability-fab.show{display:flex}
 
 .ink-btn.diff{
   display:flex;align-items:center;gap:14px;text-align:left;

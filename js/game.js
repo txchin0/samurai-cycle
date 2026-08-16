@@ -29,6 +29,8 @@ const state = {
   windowEnd: 0,
   effectiveTime: 0,     // base waveTime × the current wave's time multiplier
   awaiting: false,      // true while a demon is on screen expecting input
+  abilityId: 'issen',   // equipped ability (registry in js/abilities.js)
+  abilityKills: 0,      // manual kills toward recharging the ability (0..killsRequired)
 };
 
 /* ---- element helpers ---- */
@@ -109,7 +111,9 @@ async function startGame() {
   state.current = null;     // first demon may carry any letter
   state.monsters = [];
   state.targetIndex = 0;
+  state.abilityKills = ABILITIES[state.abilityId].killsRequired;
   updateHud();
+  updateAbilityUI();
   $('#best').textContent = getBest();
   $('#samurai').className = 'idle';
   $('#screen-game').classList.toggle('no-ui', !settings.showUI);
@@ -235,23 +239,11 @@ function handleKey(letter) {
     // HIT!
     slashSound(letter);
     strikeMonster(target.el);
-    state.score++;
-    state.streak++;
-    if (state.score > getBest()) {
-      if (state.mode === 'advanced') state.bestAdvanced = state.score;
-      else state.best = state.score;
-      localStorage.setItem(bestKey(), state.score);
-    }
-    updateHud();
+    registerKill();
+    chargeAbility();
     popup(pickCry());
     state.targetIndex++;
-    if (state.targetIndex >= state.monsters.length) {
-      state.awaiting = false;
-      cancelAnimationFrame(state.rafId);
-      clearTimeout(state.deadlineTimer);
-      hidePrompt();
-      scheduleSpawn();
-    }
+    if (state.targetIndex >= state.monsters.length) completeWave();
   } else if (target.type === 'skip' && !target.revealed &&
              letter === target.revealKey) {
     // Cut the cover off the skip monster: no score, timer keeps running,
@@ -286,13 +278,15 @@ function strikeEffects() {
 
 function strikeMonster(el) {
   strikeEffects();
+  strikeSlain(el);
+}
 
-  if (el) {
-    el.classList.remove('enter');
-    el.classList.add('slain');
-    const dead = el;
-    setTimeout(() => dead.remove(), 480);
-  }
+function strikeSlain(el) {
+  if (!el) return;
+  el.classList.remove('enter');
+  el.classList.add('slain');
+  const dead = el;
+  setTimeout(() => dead.remove(), 480);
 }
 
 const CRIES = ['斬！', 'SLASH!', '一閃!', 'HA!', '切！'];
@@ -347,11 +341,71 @@ function updateHud() {
   $('#streak').textContent = state.streak;
 }
 
+/* ---- active ability plumbing ---- */
+// Shared scoring for any kill (manual strikes and ability slays).
+function registerKill() {
+  state.score++;
+  state.streak++;
+  if (state.score > getBest()) {
+    if (state.mode === 'advanced') state.bestAdvanced = state.score;
+    else state.best = state.score;
+    localStorage.setItem(bestKey(), state.score);
+  }
+  updateHud();
+}
+
+// Finish a cleared wave exactly like a successful final strike.
+function completeWave() {
+  state.awaiting = false;
+  cancelAnimationFrame(state.rafId);
+  clearTimeout(state.deadlineTimer);
+  hidePrompt();
+  scheduleSpawn();
+}
+
+// Manual strikes refill the ability meter (ability slays do not).
+function chargeAbility() {
+  const ability = ABILITIES[state.abilityId];
+  if (state.abilityKills < ability.killsRequired) {
+    state.abilityKills = Math.min(ability.killsRequired, state.abilityKills + 1);
+    updateAbilityUI();
+  }
+}
+
+// Generic trigger: guard, spend the charge, then run the ability's effect.
+function activateAbility() {
+  const ability = ABILITIES[state.abilityId];
+  if (!state.playing || !state.awaiting) return;
+  if (state.abilityKills < ability.killsRequired) return;
+  if (ability.canActivate && !ability.canActivate()) return;
+  state.abilityKills = 0;
+  updateAbilityUI();
+  ability.activate();
+}
+
+// Syncs every .ability-btn (touch pad slot + bottom-left FAB): ring fill
+// (0–100% of the charge) and the ready/grayed state.
+function updateAbilityUI() {
+  const ability = ABILITIES[state.abilityId];
+  const frac = Math.min(1, state.abilityKills / ability.killsRequired);
+  const ready = frac >= 1;
+  document.querySelectorAll('.ability-btn').forEach((btn) => {
+    btn.classList.toggle('ready', ready);
+    btn.setAttribute('aria-disabled', String(!ready));
+    const fill = btn.querySelector('.ring-fill');
+    if (fill) fill.style.strokeDashoffset = String(100 * (1 - frac));
+  });
+}
+
 /* ---- input listeners ---- */
 window.addEventListener('keydown', (e) => {
   const k = e.key.toUpperCase();
   if (state.screen === 'game' && 'ABCDEFG'.includes(k)) {
     handleKey(k);
+    e.preventDefault();
+  }
+  if (state.screen === 'game' && (e.key === ' ' || e.code === 'Space')) {
+    activateAbility();
     e.preventDefault();
   }
   if (e.key === 'Escape' && state.screen === 'game') {
@@ -365,10 +419,18 @@ window.addEventListener('keydown', (e) => {
 });
 
 // On-screen note buttons (touch devices)
-document.querySelectorAll('.note-btn').forEach((btn) => {
+document.querySelectorAll('.note-btn[data-note]').forEach((btn) => {
   btn.addEventListener('pointerdown', (e) => {
     e.preventDefault();
     handleKey(btn.dataset.note);
+  });
+});
+
+// Ability buttons (touch pad slot + bottom-left FAB)
+document.querySelectorAll('.ability-btn').forEach((btn) => {
+  btn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    activateAbility();
   });
 });
 
