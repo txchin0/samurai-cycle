@@ -15,6 +15,12 @@ const COVER_REVEAL_MS = 480;  // how long the cover-split reveal lasts
 // and the reverse monster's in settings.reverseMonsterChance (both 0–1
 // fractions, persisted in the options).
 function currentMonsterChances() {
+  if (state.mode === 'stage') {
+    return {
+      skip: state.stageConfig.skipChance,
+      reverse: state.stageConfig.reverseChance,
+    };
+  }
   if (!state.custom) {
     return {
       skip: settings.skipMonsterChance,

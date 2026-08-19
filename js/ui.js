@@ -8,6 +8,7 @@
 
 const screens = {
   menu: $('#screen-menu'),
+  stages: $('#screen-stages'),
   difficulty: $('#screen-difficulty'),
   options: $('#screen-options'),
   game: $('#screen-game'),
@@ -22,7 +23,7 @@ const screens = {
      while touches that start on the difficulty screen or a range slider
      keep their native vertical scroll and drag behavior.             */
 /* ================================================================== */
-const GESTURE_EXEMPT = '#screen-difficulty, input[type="range"]';
+const GESTURE_EXEMPT = '#screen-difficulty, #screen-stages, input[type="range"]';
 let lockedTouch = false;
 
 document.addEventListener('touchstart', (e) => {
@@ -45,10 +46,46 @@ document.addEventListener('touchcancel', () => { lockedTouch = false; });
 
 function show(name) {
   Object.values(screens).forEach((s) => s.classList.remove('active'));
+  if (name === 'stages') renderStageSelect();
   screens[name].classList.add('active');
   state.screen = name;
   refreshNotePad();
 }
+
+/* ---- 50-stage select grid ---- */
+function renderStageSelect() {
+  const grid = $('#stage-grid');
+  grid.innerHTML = '';
+
+  for (let stage = 1; stage <= STAGE_COUNT; stage++) {
+    const cfg = stageConfig(stage);
+    const unlocked = stage <= progress.unlockedStage;
+    const best = stageBest(stage);
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'stage-cell' +
+      (cfg.boss ? ' boss' : '') +
+      (unlocked ? '' : ' locked');
+    cell.dataset.stage = String(stage);
+    cell.title = unlocked
+      ? `STAGE ${stage} · ${cfg.blockName}${cfg.boss ? ' · BOSS' : ''}${best ? ` · BEST ${best}` : ''}`
+      : `STAGE ${stage} · LOCKED`;
+    cell.innerHTML = `
+      <span class="stage-num">${stage}</span>
+      ${cfg.boss ? '<span class="stage-badge">BOSS</span>' : ''}
+      ${unlocked
+        ? `<small class="stage-best">${best || '·'}</small>`
+        : '<span class="stage-lock">鎖</span>'}`;
+    grid.appendChild(cell);
+  }
+}
+
+$('#stage-grid').addEventListener('click', (e) => {
+  const cell = e.target.closest('.stage-cell');
+  if (!cell) return;
+  const stage = Number(cell.dataset.stage);
+  if (stage <= progress.unlockedStage) startStage(stage);
+});
 
 /* ================================================================== */
 /*  MENU / OPTIONS WIRING                                             */
@@ -57,7 +94,13 @@ function show(name) {
 document.querySelectorAll('[data-go]').forEach((btn) => {
   btn.addEventListener('click', () => {
     const target = btn.dataset.go;
-    if (target === 'menu') { quitToMenu(); return; }
+    if (target === 'menu') {
+      // Menu navigation from stage select/options/practice should simply go
+      // back to the menu; only the in-game quit button tears down a run.
+      if (state.screen === 'game') quitToMenu();
+      else show('menu');
+      return;
+    }
     show(target);
   });
 });
@@ -264,7 +307,12 @@ $('#advanced-begin').addEventListener('click', () => {
 });
 
 // retry
-$('#retry').addEventListener('click', startGame);
+$('#retry').addEventListener('click', retryCurrentRun);
+
+// game-over menu: campaign runs return to stage select, practice to menu
+$('#over-menu').addEventListener('click', () => {
+  show(state.mode === 'stage' ? 'stages' : 'menu');
+});
 
 // cycle toggle
 const cycleDescs = {
@@ -455,6 +503,7 @@ if (typeof matchMedia === 'function') {
 
 /* ---- init ---- */
 loadOptions();
+loadProgress();
 syncOptionsUI();
 $('#best').textContent = getBest();
 renderAbilityButtons();

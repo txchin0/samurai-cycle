@@ -11,6 +11,8 @@ const state = {
   playing: false,
   custom: false,        // true while playing a custom-difficulty run
   mode: 'normal',       // 'normal' | 'advanced'
+  stage: 1,             // current campaign stage (1-50)
+  stageConfig: null,    // stageConfig(stage) while playing the campaign
   current: null,        // letter currently displayed
   answer: null,         // letter the player must press
   monsters: [],         // active wave: {type, el, note, answer, ...}
@@ -94,10 +96,12 @@ function cycleHint() {
 }
 
 function bestKey() {
+  if (state.mode === 'stage') return null;
   return state.mode === 'advanced' ? 'samurai-best-advanced' : 'samurai-best';
 }
 
 function getBest() {
+  if (state.mode === 'stage') return stageBest(state.stage);
   return state.mode === 'advanced' ? state.bestAdvanced : state.best;
 }
 
@@ -127,6 +131,19 @@ async function startGame() {
   if (state.playing) beginPrepare();   // in case the player quit while waiting
 }
 
+// Start a campaign stage: apply its monster count, wave timer, and mix,
+// then run the usual endless-until-you-fall duel.
+function startStage(stage) {
+  const cfg = stageConfig(stage);
+  state.mode = 'stage';
+  state.custom = false;
+  state.stage = cfg.stage;
+  state.stageConfig = cfg;
+  state.waveTime = cfg.waveTime;
+  state.monsterCount = cfg.monsters;
+  startGame();
+}
+
 // Calm "zen" moment before the duel begins: the samurai centres himself,
 // then the first demon appears.
 function beginPrepare() {
@@ -147,7 +164,7 @@ function scheduleSpawn(first = false) {
 }
 
 function spawnNext() {
-  if (state.mode === 'advanced') spawnWave(state.monsterCount);
+  if (state.mode === 'advanced' || state.mode === 'stage') spawnWave(state.monsterCount);
   else spawnDemon();
 }
 
@@ -192,7 +209,17 @@ function showPrompt() {
 
 function startWaveTimer() {
   const now = performance.now();
-  state.effectiveTime = state.waveTime * waveTimeMultiplier();
+  // In the campaign, every kill past 10 compounds a 1.5% reduction on the
+  // base wave timer. It applies to the next wave after the score crosses
+  // the threshold, and special-monster time bonuses stack on top as usual.
+  const decayStart = state.mode === 'stage'
+    ? (state.stageConfig.boss ? BOSS_STAGE_UNLOCK_SCORE : SCORE_TIMER_DECAY_START)
+    : 0;
+  const decaySteps = state.mode === 'stage'
+    ? Math.max(0, state.score - decayStart)
+    : 0;
+  const decayFactor = Math.pow(1 - SCORE_TIMER_DECAY_RATE, decaySteps);
+  state.effectiveTime = Math.round(state.waveTime * decayFactor * waveTimeMultiplier());
   state.windowStart = now;
   state.windowEnd = now + state.effectiveTime;
   const fill = $('#timer-fill');
@@ -329,6 +356,30 @@ function gameOver(reason) {
   $('#final-score').textContent = state.score;
   $('#final-best').textContent = getBest();
 
+  if (state.mode === 'stage') {
+    const cfg = state.stageConfig;
+    const passed = state.score >= cfg.passScore;
+    const nextUnlocked = passed && cfg.stage < STAGE_COUNT;
+    $('#over-stage').textContent = `STAGE ${cfg.stage} · ${cfg.blockName}`;
+    $('#over-stage').classList.toggle('boss', cfg.boss);
+    $('#over-unlock').classList.toggle('success', passed);
+    if (nextUnlocked) {
+      unlockNextStage(cfg.stage);
+      $('#over-unlock').textContent = `CLEARED — STAGE ${cfg.stage + 1} UNLOCKED`;
+    } else if (cfg.stage >= STAGE_COUNT && passed) {
+      $('#over-unlock').textContent = 'FINAL STAGE MASTERED';
+    } else if (cfg.boss) {
+      $('#over-unlock').textContent = `NEED ${cfg.passScore} TO PASS BOSS`;
+    } else {
+      $('#over-unlock').textContent = `NEED ${cfg.passScore} TO UNLOCK NEXT STAGE`;
+    }
+  } else {
+    $('#over-stage').textContent = '';
+    $('#over-unlock').textContent = '';
+    $('#over-stage').classList.remove('boss');
+    $('#over-unlock').classList.remove('success');
+  }
+
   setTimeout(() => {
     clearDemon();
     show('over');
@@ -339,6 +390,9 @@ function updateHud() {
   $('#score').textContent = state.score;
   $('#best').textContent = getBest();
   $('#streak').textContent = state.streak;
+  $('#stage-num').textContent = state.mode === 'stage'
+    ? state.stage
+    : state.mode === 'advanced' ? 'ADV' : 'NOR';
 }
 
 /* ---- active ability plumbing ---- */
@@ -346,7 +400,9 @@ function updateHud() {
 function registerKill() {
   state.score++;
   state.streak++;
-  if (state.score > getBest()) {
+  if (state.mode === 'stage') {
+    if (recordStageBest(state.stage, state.score)) saveProgress();
+  } else if (state.score > getBest()) {
     if (state.mode === 'advanced') state.bestAdvanced = state.score;
     else state.best = state.score;
     localStorage.setItem(bestKey(), state.score);
@@ -414,7 +470,7 @@ window.addEventListener('keydown', (e) => {
   if (state.screen === 'over' && !e.repeat &&
       (k === 'R' || e.key === ' ' || e.key === 'Enter')) {
     e.preventDefault();
-    startGame();
+    retryCurrentRun();
   }
 });
 
@@ -442,5 +498,12 @@ function quitToMenu() {
   cancelAnimationFrame(state.rafId);
   clearDemon();
   $('#samurai').className = 'idle';
-  show('menu');
+  show(state.mode === 'stage' ? 'stages' : 'menu');
+}
+
+// Retry the current run: same stage in the campaign, same difficulty in
+// practice mode.
+function retryCurrentRun() {
+  if (state.mode === 'stage') startStage(state.stage);
+  else startGame();
 }

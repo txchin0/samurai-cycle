@@ -23,6 +23,142 @@ const ADVANCED_DIFFICULTY = { // monsters per wave + total wave time in ms
   hard:   { monsters: 3, time: 2400 },
 };
 
+/* ---- 50-stage campaign ----
+   Five teaching blocks of ten stages:
+   BASICS (1-10) → SKIP (11-20) → WAVES (21-30) →
+   REVERSE (31-40) → COMBINED (41-50).
+
+   `budget` is the reaction time budget per demon in ms. The wave timer is
+   budget × monsters (rounded to 10 ms). Special-monster time bonuses are
+   applied on top at runtime by waveTimeMultiplier(). */
+const STAGE_COUNT = 50;
+const STAGE_UNLOCK_SCORE = 10;
+const BOSS_STAGE_UNLOCK_SCORE = 20;
+const SCORE_TIMER_DECAY_RATE = 0.015;   // per score past 10 in stage mode
+const SCORE_TIMER_DECAY_START = STAGE_UNLOCK_SCORE;
+
+const STAGE_BLOCK_NAMES = ['BASICS', 'SKIP', 'WAVES', 'REVERSE', 'COMBINED'];
+
+const STAGE_MONSTERS = [
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 1-10
+  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // 11-20
+  2, 2, 3, 3, 4, 4, 5, 5, 5, 5, // 21-30
+  4, 4, 5, 5, 5, 5, 5, 5, 5, 5, // 31-40
+  5, 5, 5, 5, 5, 5, 5, 5, 5, 5, // 41-50
+];
+
+const STAGE_BUDGET_MS = [
+  3000, 2900, 2800, 2700, 2600, 2500, 2400, 2300, 2200, 1200, // 1-10
+  2600, 2500, 2400, 2300, 2200, 2100, 2000, 1900, 1800, 1000, // 11-20
+  1700, 1600, 1500, 1400, 1300, 1200, 1100, 1000, 900, 600,   // 21-30
+  1100, 1050, 1000, 950, 900, 850, 800, 750, 700, 550,        // 31-40
+  800, 775, 750, 725, 700, 675, 650, 625, 600, 450,           // 41-50
+];
+
+const STAGE_SKIP_PERCENT = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          // 1-10
+  10, 12, 15, 18, 20, 22, 25, 28, 30, 40, // 11-20
+  32, 34, 36, 38, 40, 42, 44, 46, 48, 50, // 21-30
+  45, 45, 46, 46, 47, 47, 48, 48, 49, 50, // 31-40
+  45, 46, 47, 48, 49, 50, 50, 50, 50, 50, // 41-50
+];
+
+const STAGE_REVERSE_PERCENT = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          // 1-10
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          // 11-20
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,          // 21-30
+  10, 12, 14, 16, 18, 20, 22, 24, 26, 30, // 31-40
+  30, 31, 32, 33, 34, 35, 36, 37, 38, 40, // 41-50
+];
+
+function clampStage(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(STAGE_COUNT, Math.max(1, Math.round(n)));
+}
+
+function stageConfig(stage) {
+  const n = clampStage(stage);
+  const i = n - 1;
+  const monsters = STAGE_MONSTERS[i];
+  const budget = STAGE_BUDGET_MS[i];
+  return {
+    stage: n,
+    boss: n % 10 === 0,
+    block: Math.floor(i / 10) + 1,
+    blockName: STAGE_BLOCK_NAMES[Math.floor(i / 10)],
+    monsters,
+    budget,
+    waveTime: Math.round((budget * monsters) / 10) * 10,
+    skipChance: STAGE_SKIP_PERCENT[i] / 100,
+    reverseChance: STAGE_REVERSE_PERCENT[i] / 100,
+    passScore: n % 10 === 0 ? BOSS_STAGE_UNLOCK_SCORE : STAGE_UNLOCK_SCORE,
+  };
+}
+
+/* ---- stage campaign progress ---- */
+const PROGRESS_KEY = 'samurai-progress';
+const progress = {
+  unlockedStage: 1,
+  stageBests: {},   // stage number → best score
+};
+
+function loadProgress() {
+  let raw = null;
+  try {
+    raw = JSON.parse(localStorage.getItem(PROGRESS_KEY));
+  } catch (e) { /* missing/corrupt storage → fresh campaign */ }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return;
+
+  if (raw.unlockedStage !== undefined) {
+    progress.unlockedStage = clampStage(raw.unlockedStage);
+  }
+
+  if (raw.stageBests && typeof raw.stageBests === 'object' && !Array.isArray(raw.stageBests)) {
+    progress.stageBests = {};
+    Object.entries(raw.stageBests).forEach(([key, value]) => {
+      const stage = Number(key);
+      const score = Number(value);
+      if (Number.isFinite(stage) && Number.isFinite(score)) {
+        progress.stageBests[clampStage(stage)] = Math.max(0, Math.floor(score));
+      }
+    });
+  }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify({
+      unlockedStage: progress.unlockedStage,
+      stageBests: progress.stageBests,
+    }));
+  } catch (e) { /* private mode / quota errors should never break play */ }
+}
+
+function stageBest(stage) {
+  return progress.stageBests[clampStage(stage)] || 0;
+}
+
+function recordStageBest(stage, score) {
+  const n = clampStage(stage);
+  const s = Math.max(0, Math.floor(score));
+  if (s > (progress.stageBests[n] || 0)) {
+    progress.stageBests[n] = s;
+    return true;
+  }
+  return false;
+}
+
+function unlockNextStage(currentStage) {
+  const next = clampStage(currentStage) + 1;
+  if (next <= STAGE_COUNT && next > progress.unlockedStage) {
+    progress.unlockedStage = next;
+    saveProgress();
+    return true;
+  }
+  return false;
+}
+
 const SPAWN_MIN = 1800;       // random delay before a demon appears (ms)
 const SPAWN_MAX = 3600;       // longer, zen-like pauses between demons
 const FIRST_SPAWN_MIN = 700;  // random delay before the FIRST demon (ms)

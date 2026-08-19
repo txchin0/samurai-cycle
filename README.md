@@ -47,26 +47,23 @@ it in the other direction.
 
 ## Menus
 
-- **Start → Difficulty**
-  - **Normal** tab (default)
-    - **Novice** — 2.0 s reaction window
-    - **Ronin** — 1.2 s
-    - **Master** — 0.7 s
-    - **Custom** — set your own reaction window (0.3–3.0 s) and the average
-      time between monsters (0.3–5.0 s, randomized around it), plus the
-      monster mix (skip and reverse chances; normal demons fill the rest)
-  - **Advanced** tab (tap the tab or swipe horizontally on the screen)
-    - **Novice** — 2 monsters per wave, 3.0 s total wave time
-    - **Ronin** — 3 monsters per wave, 3.6 s total wave time
-    - **Master** — 3 monsters per wave, 2.4 s total wave time
-    - **Custom** — 2–5 monsters per wave, a 0.5–6.0 s whole-wave reaction
-      window, the average time between waves (0.3–5.0 s, randomized), and
-      the monster mix (skip and reverse chances; normal demons fill the rest)
-  - In Advanced, strike the monsters bottom-to-top: the nearest demon first,
-    then the smaller demons further up the path. Normal and Advanced custom
-    settings (including each monster mix) are saved separately. Waves
-    containing special monsters (skip or reverse) get extra time — the wave
-    window is multiplied by
+- **STAGES** — a 50-stage campaign in five teaching blocks:
+  **BASICS → SKIP → WAVES → REVERSE → COMBINED**. Every 10th stage is a
+  boss stage. Stages are endless score runs: score **10** on a normal stage
+  (or **20** on a boss) to unlock the next. Stage 1 starts at a relaxed
+  3-second window with a single normal demon; later blocks introduce skip
+  demons, multi-monster waves, reverse demons, and finally a 5-monster,
+  near-tightest window with a heavy special mix. Past 10 kills on normal
+  stages (20 on boss stages), each additional kill compounds a **1.5%
+  reduction** to the stage's base timer.
+- **PRACTICE** — the original normal/advanced/custom difficulty screen, for
+  tuning your own runs without touching campaign progress.
+  - **Normal** — Novice 2.0 s, Ronin 1.2 s, Master 0.7 s, plus Custom
+    reaction window, spawn pace, and monster mix.
+  - **Advanced** — 2–5 monsters per wave with a whole-wave window, spawn
+    pace, and monster mix; strike monsters bottom-to-top (nearest first).
+  - In Advanced, waves containing special monsters (skip or reverse) get
+    extra time — the wave window is multiplied by
     `1 + Σ(modifier / count)`, so each skip adds its share of the 100% bonus
     and each reverse adds its share of the 100% bonus (a lone special monster
     doubles the window).
@@ -80,7 +77,8 @@ it in the other direction.
     buttons on touch-first devices (primary input is touch), even if a mouse or
     stylus is also connected
 
-Your best score is saved in the browser (`localStorage`).
+Your campaign progress (unlocked stage and per-stage bests) and practice
+scores are saved in the browser (`localStorage`).
 
 ## Run it
 
@@ -125,7 +123,8 @@ then visit <http://localhost:8731>.
 - `style.css` — the sumi‑e / cartoon theme (paper texture, ink buttons, demons)
 - `sumie_forest.webp`, `sumie_forest_landscape.webp` — the portrait and
   landscape gameplay backdrop images (the right one is picked for the window)
-- `js/config.js` — cycles, difficulty tables, spawn pacing, persisted options
+- `js/config.js` — cycles, difficulty tables, the 50-stage progression,
+  spawn pacing, and persisted options/progress
 - `js/abilities.js` — the active-ability registry (Issen's effect, icon and
   recharge cost; new abilities plug in here)
 - `js/sound.js` — WebAudio blips (synthesized, no assets)

@@ -109,6 +109,80 @@ body{
   border-radius:4px;
 }
 
+/* ---- 50-stage select ---- */
+#screen-stages{
+  touch-action:pan-y;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  justify-content:flex-start;
+  scrollbar-width:thin;
+  scrollbar-color:var(--ink) transparent;
+}
+#screen-stages .brush-frame{
+  margin:auto;
+  width:100%;
+  max-width:900px;
+}
+#screen-stages::-webkit-scrollbar{width:8px}
+#screen-stages::-webkit-scrollbar-track{background:transparent}
+#screen-stages::-webkit-scrollbar-thumb{
+  background:var(--ink);
+  border:2px solid var(--paper);
+  border-radius:4px;
+}
+
+.stage-frame{width:100%}
+#stage-grid{
+  display:grid;
+  grid-template-columns:repeat(10,1fr);
+  gap:8px;
+  margin:18px 0 4px;
+}
+.stage-cell{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:2px;
+  aspect-ratio:1;
+  min-width:0;
+  border:2px solid var(--ink);
+  border-radius:4px 10px 6px 12px;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Shippori Mincho',serif;
+  font-weight:800;
+  box-shadow:3px 3px 0 rgba(0,0,0,.65);
+  cursor:pointer;
+  touch-action:manipulation;
+  transition:transform .08s ease, box-shadow .08s ease, opacity .15s;
+}
+.stage-cell:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 rgba(0,0,0,.65)}
+.stage-cell:active{transform:translate(2px,2px);box-shadow:1px 1px 0 rgba(0,0,0,.65)}
+.stage-cell .stage-num{font-size:1.05rem;line-height:1}
+.stage-cell .stage-badge{
+  position:absolute;top:2px;right:3px;
+  font-size:.38rem;letter-spacing:.06em;font-weight:900;
+  background:var(--ink);color:var(--paper);
+  padding:1px 3px;border-radius:2px;
+}
+.stage-cell .stage-best{font-size:.52rem;opacity:.65;letter-spacing:.03em}
+.stage-cell .stage-lock{font-size:.7rem;opacity:.8}
+.stage-cell.boss{
+  background:var(--ink);
+  color:var(--paper);
+}
+.stage-cell.boss .stage-badge{background:var(--paper);color:var(--ink)}
+.stage-cell.boss .stage-best{color:var(--paper);opacity:.75}
+.stage-cell.locked{
+  opacity:.32;
+  filter:grayscale(1);
+  cursor:not-allowed;
+  box-shadow:none;
+}
+.stage-cell.locked:hover{transform:none;box-shadow:none}
+
 .brush-frame{
   position:relative;
   padding:30px 42px;
@@ -649,11 +723,16 @@ body.portrait .demon.depth-4{bottom:78%}
 body.portrait #samurai{margin-left:-110px}
 body.portrait #samurai svg{width:220px;height:257px}
 body.portrait #popup{top:34%}
+body.portrait #stage-grid{grid-template-columns:repeat(5,1fr);gap:7px}
 
 /* ---- game over ---- */
 .over-line{font-size:1.2rem;margin:8px 0;letter-spacing:.04em}
 .over-line.small{opacity:.65;font-size:1rem}
 .over-line b{font-size:1.6rem}
+#over-unlock.success{font-weight:900;letter-spacing:.06em}
+#over-stage.boss{font-weight:900;letter-spacing:.08em}
+#over-stage:empty,
+#over-unlock:empty{display:none}
 
 .hidden{display:none}
 

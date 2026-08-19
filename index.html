@@ -22,17 +22,27 @@
           <h1 class="title">SAMURAI<span>CYCLE</span></h1>
           <p class="subtitle">— the way of the fifth —</p>
           <div class="btn-col">
-            <button class="ink-btn" data-go="difficulty">START</button>
+            <button class="ink-btn" data-go="stages">STAGES</button>
+            <button class="ink-btn ghost" data-go="difficulty">PRACTICE</button>
             <button class="ink-btn ghost" data-go="options">OPTIONS</button>
           </div>
         </div>
         <p class="foot-hint">Slash the letter-demons by playing the cycle. Miss and you fall.</p>
       </section>
 
+      <!-- ==================== STAGE SELECT ==================== -->
+      <section id="screen-stages" class="screen">
+        <div class="brush-frame stage-frame">
+          <h2 class="title sm">CHOOSE YOUR STAGE</h2>
+          <div id="stage-grid"></div>
+          <button class="ink-btn ghost tiny back" data-go="menu">← back</button>
+        </div>
+      </section>
+
       <!-- ================== DIFFICULTY ================== -->
       <section id="screen-difficulty" class="screen">
         <div class="brush-frame">
-          <h2 class="title sm">CHOOSE YOUR PATH</h2>
+          <h2 class="title sm">PRACTICE PATH</h2>
 
           <div class="diff-tabs" id="diff-tabs">
             <button class="diff-tab active" type="button" data-tab="normal">NORMAL</button>
@@ -161,6 +171,7 @@
       <!-- ===================== GAME ===================== -->
       <section id="screen-game" class="screen">
         <div id="hud">
+          <div class="hud-item">STAGE <b id="stage-num">1</b></div>
           <div class="hud-item">SCORE <b id="score">0</b></div>
           <div class="hud-item">BEST <b id="best">0</b></div>
           <div class="hud-item">STREAK <b id="streak">0</b></div>
@@ -235,9 +246,11 @@
           <h2 class="title sm" id="over-title">YOU FELL</h2>
           <p class="over-line">Demons slain: <b id="final-score">0</b></p>
           <p class="over-line small">Best: <b id="final-best">0</b></p>
+          <p class="over-line small" id="over-stage"></p>
+          <p class="over-line" id="over-unlock"></p>
           <div class="btn-col">
             <button class="ink-btn" id="retry">AGAIN</button>
-            <button class="ink-btn ghost" data-go="menu">MENU</button>
+            <button class="ink-btn ghost" id="over-menu">MENU</button>
           </div>
         </div>
       </section>
