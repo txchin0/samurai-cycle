@@ -10,6 +10,7 @@ const screens = {
   menu: $('#screen-menu'),
   stages: $('#screen-stages'),
   difficulty: $('#screen-difficulty'),
+  missions: $('#screen-missions'),
   options: $('#screen-options'),
   game: $('#screen-game'),
   over: $('#screen-over'),
@@ -47,6 +48,8 @@ document.addEventListener('touchcancel', () => { lockedTouch = false; });
 function show(name) {
   Object.values(screens).forEach((s) => s.classList.remove('active'));
   if (name === 'stages') renderStageSelect();
+  if (name === 'missions') renderMissionsScreen();
+  if (name === 'menu') updateMenuMissions();
   screens[name].classList.add('active');
   state.screen = name;
   refreshNotePad();
@@ -504,6 +507,8 @@ if (typeof matchMedia === 'function') {
 /* ---- init ---- */
 loadOptions();
 loadProgress();
+loadMissions();
+ensureToday();
 syncOptionsUI();
 $('#best').textContent = getBest();
 renderAbilityButtons();

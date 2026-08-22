@@ -176,6 +176,8 @@ function revealCover(monster) {
   slashSound(monster.revealKey);
   popup('見破った！');
   monster.revealed = true;
+  // The true letter is only visible now — restart the strike reaction clock.
+  state.lastStrikeAt = performance.now();
 
   const demon = monster.el;
   demon.classList.remove('enter');

@@ -33,6 +33,8 @@ const state = {
   awaiting: false,      // true while a demon is on screen expecting input
   abilityId: 'issen',   // equipped ability (registry in js/abilities.js)
   abilityKills: 0,      // manual kills toward recharging the ability (0..killsRequired)
+  runStats: null,       // per-run counters for the daily missions (js/missions.js)
+  lastStrikeAt: 0,      // when the current strike window opened (speed stat)
 };
 
 /* ---- element helpers ---- */
@@ -116,6 +118,8 @@ async function startGame() {
   state.monsters = [];
   state.targetIndex = 0;
   state.abilityKills = ABILITIES[state.abilityId].killsRequired;
+  resetRunStats();
+  $('#mission-banner').classList.remove('go');   // dismiss any lingering banner
   updateHud();
   updateAbilityUI();
   $('#best').textContent = getBest();
@@ -222,6 +226,7 @@ function startWaveTimer() {
   state.effectiveTime = Math.round(state.waveTime * decayFactor * waveTimeMultiplier());
   state.windowStart = now;
   state.windowEnd = now + state.effectiveTime;
+  state.lastStrikeAt = now;   // reaction clock for the daily speed stat
   const fill = $('#timer-fill');
   const track = $('#timer-track');
   track.classList.add('show');
@@ -264,9 +269,12 @@ function handleKey(letter) {
 
   if (letter === target.answer) {
     // HIT!
+    const reaction = performance.now() - state.lastStrikeAt;
+    state.lastStrikeAt = performance.now();
     slashSound(letter);
     strikeMonster(target.el);
-    registerKill();
+    if (state.runStats && reaction < FAST_KILL_MS) state.runStats.fastKills++;
+    registerKill(target, 'manual');
     chargeAbility();
     popup(pickCry());
     state.targetIndex++;
@@ -359,6 +367,10 @@ function gameOver(reason) {
   if (state.mode === 'stage') {
     const cfg = state.stageConfig;
     const passed = state.score >= cfg.passScore;
+    if (passed && state.runStats) {
+      state.runStats.stagesPassed = 1;
+      if (cfg.boss) state.runStats.bossPassed = 1;
+    }
     const nextUnlocked = passed && cfg.stage < STAGE_COUNT;
     $('#over-stage').textContent = `STAGE ${cfg.stage} · ${cfg.blockName}`;
     $('#over-stage').classList.toggle('boss', cfg.boss);
@@ -380,10 +392,16 @@ function gameOver(reason) {
     $('#over-unlock').classList.remove('success');
   }
 
+  // Fold this run into today's missions, then announce any that just
+  // completed once the over screen has settled in.
+  const missionResult = settleRunMissions();
   setTimeout(() => {
     clearDemon();
     show('over');
   }, 650);
+  if (missionResult) {
+    setTimeout(() => showMissionBanner(missionResult), 1850);
+  }
 }
 
 function updateHud() {
@@ -396,10 +414,33 @@ function updateHud() {
 }
 
 /* ---- active ability plumbing ---- */
-// Shared scoring for any kill (manual strikes and ability slays).
-function registerKill() {
+// Per-run counters that feed the daily missions; settled exactly once
+// per run by settleRunMissions() (js/missions.js).
+function resetRunStats() {
+  state.runStats = {
+    kills: 0,
+    killsByType: { normal: 0, skip: 0, reverse: 0 },
+    abilityUses: 0,     // ability activations
+    issenKills: 0,      // demons slain by the ability
+    fastKills: 0,       // manual strikes faster than FAST_KILL_MS
+    stagesPassed: 0,    // 1 if a campaign stage was passed this run
+    bossPassed: 0,      // 1 if that stage was a boss stage
+    settled: false,     // guards against double settlement
+  };
+}
+
+// Shared scoring for any kill (manual strikes and ability slays). The
+// monster + source feed the daily-mission run stats.
+function registerKill(monster, source = 'manual') {
   state.score++;
   state.streak++;
+  if (state.runStats) {
+    const stats = state.runStats;
+    stats.kills++;
+    const type = monster && monster.type;
+    if (type && stats.killsByType[type] !== undefined) stats.killsByType[type]++;
+    if (source === 'issen') stats.issenKills++;
+  }
   if (state.mode === 'stage') {
     if (recordStageBest(state.stage, state.score)) saveProgress();
   } else if (state.score > getBest()) {
@@ -435,6 +476,7 @@ function activateAbility() {
   if (state.abilityKills < ability.killsRequired) return;
   if (ability.canActivate && !ability.canActivate()) return;
   state.abilityKills = 0;
+  if (state.runStats) state.runStats.abilityUses++;
   updateAbilityUI();
   ability.activate();
 }
@@ -496,9 +538,12 @@ function quitToMenu() {
   clearTimeout(state.prepareTimer);
   clearTimeout(state.deadlineTimer);
   cancelAnimationFrame(state.rafId);
+  // An abandoned run still counts: settle its missions before leaving.
+  const missionResult = settleRunMissions();
   clearDemon();
   $('#samurai').className = 'idle';
   show(state.mode === 'stage' ? 'stages' : 'menu');
+  if (missionResult) setTimeout(() => showMissionBanner(missionResult), 500);
 }
 
 // Retry the current run: same stage in the campaign, same difficulty in

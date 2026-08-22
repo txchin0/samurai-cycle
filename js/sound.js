@@ -36,3 +36,7 @@ function issenSound() {
 function failSound() {
   beep(90, 0.35, 'sawtooth', 0.22);
 }
+function missionSound() {
+  const notes = [523.25, 659.25, 784.0];   // C5 – E5 – G5, rising
+  notes.forEach((f, i) => setTimeout(() => beep(f, 0.12, 'triangle', 0.16), i * 110));
+}

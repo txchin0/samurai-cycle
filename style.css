@@ -734,6 +734,109 @@ body.portrait #stage-grid{grid-template-columns:repeat(5,1fr);gap:7px}
 #over-stage:empty,
 #over-unlock:empty{display:none}
 
+/* ====================================================================
+   DAILY MISSIONS
+   ==================================================================== */
+.coin-chip{
+  display:inline-block;
+  font-family:'Shippori Mincho',serif;font-weight:800;
+  font-size:1.05rem;letter-spacing:.08em;
+  border:2px solid var(--ink);
+  border-radius:4px 12px 6px 14px;
+  padding:4px 16px;
+  background:var(--paper-2);
+  box-shadow:3px 3px 0 rgba(0,0,0,.5);
+}
+.coin-chip b{font-size:1.25rem;margin-left:2px}
+/* the menu keeps its coin balance in the top-left corner, clear of the
+   centered brush-frame (which is already tall with four buttons) */
+#menu-coin-chip{position:absolute;top:14px;left:16px;z-index:1}
+
+.menu-badge{
+  display:inline-block;margin-left:12px;
+  font-size:.62rem;letter-spacing:.1em;font-weight:900;
+  background:var(--ink);color:var(--paper);
+  padding:2px 7px;border-radius:3px;
+  vertical-align:.14em;
+}
+
+.missions-frame{width:100%;max-width:560px}
+#mission-list{display:flex;flex-direction:column;gap:12px;margin:14px 0 4px;width:100%}
+.mission-card{
+  display:flex;align-items:center;gap:14px;
+  padding:10px 16px;
+  border:3px solid var(--ink);
+  border-radius:6px 14px 8px 16px;
+  background:var(--paper);
+  box-shadow:3px 3px 0 rgba(0,0,0,.65);
+  text-align:left;
+}
+.mission-kanji{
+  flex:none;width:44px;text-align:center;
+  font-family:'Shippori Mincho',serif;font-weight:800;
+  font-size:1.9rem;line-height:1;
+}
+.mission-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.mission-name{font-weight:900;letter-spacing:.1em;font-size:.92rem}
+.mission-desc{font-size:.74rem;opacity:.7;letter-spacing:.03em}
+.mission-bar{
+  height:9px;margin-top:5px;
+  border:2px solid var(--ink);border-radius:5px;
+  background:var(--paper-2);overflow:hidden;
+}
+.mission-fill{
+  height:100%;background:var(--ink);
+  transform-origin:left center;transform:scaleX(0);
+  transition:transform .3s ease;
+}
+.mission-side{
+  flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;
+  font-family:'Shippori Mincho',serif;font-weight:800;
+}
+.mission-progress{font-size:1.05rem;line-height:1}
+.mission-reward{font-size:.78rem;opacity:.75}
+.mission-card.done{background:var(--ink);color:var(--paper)}
+.mission-card.done .mission-bar{border-color:var(--paper)}
+.mission-card.done .mission-fill{background:var(--paper)}
+.mission-card.done .mission-desc{opacity:.8}
+.mission-bonus{
+  font-weight:900;letter-spacing:.08em;font-size:.85rem;
+  margin:10px 0 0;
+}
+.missions-reset{font-size:.8rem;opacity:.6;letter-spacing:.08em;margin:8px 0 0}
+
+/* mission-complete banner: slides down from the top of the paper,
+   holds, then slides back up (restarted via the .go class toggle) */
+#mission-banner{
+  position:absolute;top:0;left:0;right:0;z-index:40;
+  display:flex;align-items:center;justify-content:center;gap:16px;
+  padding:12px 22px;
+  background:var(--ink);color:var(--paper);
+  box-shadow:0 10px 26px rgba(0,0,0,.45);
+  transform:translateY(-110%);
+  pointer-events:none;
+}
+#mission-banner.go{animation:banner-drop 3.6s ease forwards}
+@keyframes banner-drop{
+  0%{transform:translateY(-110%)}
+  10%,86%{transform:translateY(0)}
+  100%{transform:translateY(-110%)}
+}
+.banner-kanji{
+  font-family:'Shippori Mincho',serif;font-weight:800;
+  font-size:2.1rem;line-height:1;
+}
+.banner-body{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.banner-title{font-weight:900;letter-spacing:.22em;font-size:.78rem}
+.banner-lines{display:flex;flex-direction:column;gap:1px}
+.banner-line{
+  display:flex;align-items:baseline;gap:14px;
+  font-size:.95rem;letter-spacing:.06em;
+}
+.banner-line .line-name{font-weight:700}
+.banner-line .line-reward{font-family:'Shippori Mincho',serif;font-weight:800}
+.banner-line.bonus .line-name{font-weight:900}
+
 .hidden{display:none}
 
 /* hide-UI mode: no timer, no hints, no HUD — just you and the demons */

@@ -44,7 +44,7 @@ const ABILITIES = {
       state.monsters.forEach((monster) => {
         if (monster.el && !monster.el.classList.contains('slain')) {
           strikeSlain(monster.el);
-          registerKill();
+          registerKill(monster, 'issen');
         }
       });
       completeWave();

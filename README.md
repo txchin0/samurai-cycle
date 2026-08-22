@@ -56,6 +56,14 @@ it in the other direction.
   near-tightest window with a heavy special mix. Past 10 kills on normal
   stages (20 on boss stages), each additional kill compounds a **1.5%
   reduction** to the stage's base timer.
+- **MISSIONS** — three daily missions rolled each day from a pool (kill
+  counts, monster types, ability use, fast strikes, single-run scores,
+  campaign passes). Progress from every run — stage or practice — feeds a
+  shared daily tally; missions complete themselves the moment the tally
+  crosses their target and pay coins (文) on the spot. Clear all three for
+  a +25 文 daily bonus. A banner slides down from the top of the screen
+  after a run ends to announce what you completed. The coin balance
+  persists forever; missions reroll at local midnight.
 - **PRACTICE** — the original normal/advanced/custom difficulty screen, for
   tuning your own runs without touching campaign progress.
   - **Normal** — Novice 2.0 s, Ronin 1.2 s, Master 0.7 s, plus Custom
@@ -77,8 +85,9 @@ it in the other direction.
     buttons on touch-first devices (primary input is touch), even if a mouse or
     stylus is also connected
 
-Your campaign progress (unlocked stage and per-stage bests) and practice
-scores are saved in the browser (`localStorage`).
+Your campaign progress (unlocked stage and per-stage bests), practice
+scores, and daily missions + coin wallet are saved in the browser
+(`localStorage`).
 
 ## Run it
 
@@ -131,9 +140,12 @@ then visit <http://localhost:8731>.
 - `js/game.js` — core state machine, cycle logic, timing, input, game over
 - `js/monsters.js` — monster spawning, types & rendering (the skip monster,
   reverse monster, and future types live here)
+- `js/missions.js` — the daily missions: pool, daily roll, run settlement,
+  coin wallet, completion banner, and the missions screen
 - `js/ui.js` — screens, menus, options, touch keys, fit-to-viewport, init
 
-The files load in order: `config.js → sound.js → game.js → monsters.js → ui.js`.
+The files load in order: `config.js → abilities.js → sound.js → game.js →
+monsters.js → missions.js → ui.js`.
 Monster spawn rates are configurable in `js/config.js` (`skipMonsterChance`,
 `reverseMonsterChance`, plus the `custom*Chance` and `advanced*Chance`
 settings used by Custom mode).

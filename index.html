@@ -17,12 +17,14 @@
 
       <!-- ===================== MENU ===================== -->
       <section id="screen-menu" class="screen active">
+        <div class="coin-chip" id="menu-coin-chip" aria-label="Coins">文 <b id="menu-coins">0</b></div>
         <div class="brush-frame">
           <div class="kanji-big">侍</div>
           <h1 class="title">SAMURAI<span>CYCLE</span></h1>
           <p class="subtitle">— the way of the fifth —</p>
           <div class="btn-col">
             <button class="ink-btn" data-go="stages">STAGES</button>
+            <button class="ink-btn ghost" data-go="missions" id="menu-missions">MISSIONS<span class="menu-badge" id="missions-badge">0/3</span></button>
             <button class="ink-btn ghost" data-go="difficulty">PRACTICE</button>
             <button class="ink-btn ghost" data-go="options">OPTIONS</button>
           </div>
@@ -168,6 +170,18 @@
         </div>
       </section>
 
+      <!-- ==================== MISSIONS ==================== -->
+      <section id="screen-missions" class="screen">
+        <div class="brush-frame missions-frame">
+          <h2 class="title sm">TODAY'S MISSIONS 任務</h2>
+          <div class="coin-chip" aria-label="Coins">文 <b id="mission-coins">0</b></div>
+          <div id="mission-list"></div>
+          <p class="mission-bonus hidden" id="mission-bonus">ALL MISSIONS CLEARED · DAILY BONUS +25 文</p>
+          <p class="missions-reset" id="mission-reset"></p>
+          <button class="ink-btn ghost tiny back" data-go="menu">← back</button>
+        </div>
+      </section>
+
       <!-- ===================== GAME ===================== -->
       <section id="screen-game" class="screen">
         <div id="hud">
@@ -256,6 +270,16 @@
       </section>
 
     </div><!-- /stage -->
+
+    <!-- Mission-complete banner: slides down from the top of the paper
+         after a run ends (see showMissionBanner in missions.js) -->
+    <div id="mission-banner" role="status" aria-live="polite">
+      <span class="banner-kanji">任</span>
+      <div class="banner-body">
+        <span class="banner-title" id="banner-title">MISSION COMPLETE</span>
+        <div class="banner-lines" id="banner-lines"></div>
+      </div>
+    </div>
   </div><!-- /paper -->
 
   <!-- On-screen note buttons (fixed to the bottom of the viewport on touch devices) -->
@@ -283,6 +307,7 @@
   <script src="js/sound.js"></script>
   <script src="js/game.js"></script>
   <script src="js/monsters.js"></script>
+  <script src="js/missions.js"></script>
   <script src="js/ui.js"></script>
 </body>
 </html>

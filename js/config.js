@@ -171,6 +171,9 @@ const PREPARE_MS = 1000;      // brief "ready" moment before the first demon
 const ADVANCED_MONSTERS_MIN = 2;
 const ADVANCED_MONSTERS_MAX = 5;
 
+const FAST_KILL_MS = 1000;    // manual strikes faster than this count toward
+                              // the Quick Draw daily mission (js/missions.js)
+
 const SKIP_TIME_MODIFIER = 1;   // extra reaction time (as a fraction of the
                                 // base window) added when a skip monster spawns;
                                 // 1 = a lone skip monster doubles the window (2×)
