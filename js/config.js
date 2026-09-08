@@ -34,6 +34,7 @@ const ADVANCED_DIFFICULTY = { // monsters per wave + total wave time in ms
 const STAGE_COUNT = 50;
 const STAGE_UNLOCK_SCORE = 10;
 const BOSS_STAGE_UNLOCK_SCORE = 20;
+const BOSS_STAGE_TIME_MULTIPLIER = 1.4;
 const SCORE_TIMER_DECAY_RATE = 0.015;   // per score past 10 in stage mode
 const SCORE_TIMER_DECAY_START = STAGE_UNLOCK_SCORE;
 
@@ -82,14 +83,19 @@ function stageConfig(stage) {
   const i = n - 1;
   const monsters = STAGE_MONSTERS[i];
   const budget = STAGE_BUDGET_MS[i];
+  const boss = n % 10 === 0;
+  const baseWaveTime = Math.round((budget * monsters) / 10) * 10;
+  const waveTime = boss
+    ? Math.round((baseWaveTime * BOSS_STAGE_TIME_MULTIPLIER) / 10) * 10
+    : baseWaveTime;
   return {
     stage: n,
-    boss: n % 10 === 0,
+    boss,
     block: Math.floor(i / 10) + 1,
     blockName: STAGE_BLOCK_NAMES[Math.floor(i / 10)],
     monsters,
     budget,
-    waveTime: Math.round((budget * monsters) / 10) * 10,
+    waveTime,
     skipChance: STAGE_SKIP_PERCENT[i] / 100,
     reverseChance: STAGE_REVERSE_PERCENT[i] / 100,
     passScore: n % 10 === 0 ? BOSS_STAGE_UNLOCK_SCORE : STAGE_UNLOCK_SCORE,
